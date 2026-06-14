@@ -3,6 +3,7 @@ import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
 import PointsChart from "@/components/PointsChart";
 import DevRefreshButton from "@/components/DevRefreshButton";
+import LastUpdated from "@/components/LastUpdated";
 import HeaderMatchCard from "@/components/HeaderMatchCard";
 import LiveProvider from "@/components/LiveProvider";
 import { draft, results, fixtures, lastUpdated, liveMatches } from "@/data/tournament";
@@ -80,7 +81,7 @@ export default function Page() {
           <span className="star">*</span> Assumed value &mdash; only goals (+5)
           and assists (+2) were confirmed by the organiser. Adjust these in{" "}
           <code>lib/scoring.ts</code> once your league confirms them and every
-          total recalculates. &nbsp;<span className="stamp">Updated {lastUpdated}</span>
+          total recalculates. &nbsp;<LastUpdated timestamp={lastUpdated} />
         </p>
       </footer>
     </main>
