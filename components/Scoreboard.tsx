@@ -2,6 +2,7 @@ import { buildStandings, type Standing } from "@/lib/standings";
 import { fixtures, results, liveMatches } from "@/data/tournament";
 import MatchHistory from "@/components/MatchHistory";
 import LocalTime from "@/components/LocalTime";
+import KickoffCountdown from "@/components/KickoffCountdown";
 
 function stateClass(s: Standing): string {
   if (s.rank === 1 && s.points > 0) return "leader";
@@ -33,6 +34,15 @@ function topScorers(team: string, n = 3): Array<[string, number]> {
 export default function Scoreboard() {
   const standings = buildStandings();
 
+  // Previous-matchday standings for movement arrows
+  const maxMatchday = results.length > 0 ? Math.max(...results.map((r) => r.matchday)) : 0;
+  const prevResults = results.filter((r) => r.matchday < maxMatchday);
+  const prevStandings = prevResults.length > 0 ? buildStandings(prevResults) : null;
+  const prevRank: Record<string, number> = {};
+  if (prevStandings) {
+    for (const s of prevStandings) prevRank[s.team] = s.rank;
+  }
+
   const nextGame: Record<string, (typeof fixtures)[0]> = {};
   for (const f of fixtures) {
     if (!nextGame[f.team]) nextGame[f.team] = f;
@@ -46,6 +56,7 @@ export default function Scoreboard() {
         const teamResults = results.filter((r) => r.team === s.team);
         const liveMatch = liveMatches.find((m) => m.team === s.team);
         const scorers = topScorers(s.team);
+        const moved = prevRank[s.team] !== undefined ? prevRank[s.team] - s.rank : null;
 
         return (
           <div
@@ -53,7 +64,15 @@ export default function Scoreboard() {
             className={`row ${stateClass(s)}`}
             style={{ animationDelay: `${Math.min(i, 12) * 0.03}s` }}
           >
-            <div className="plate">{s.rank}</div>
+            <div className="plate">
+              {s.rank}
+              {moved !== null && moved !== 0 && (
+                <div className={`movement ${moved > 0 ? "up" : "down"}`}>
+                  {moved > 0 ? `↑${moved}` : `↓${Math.abs(moved)}`}
+                </div>
+              )}
+              {moved === 0 && <div className="movement same">—</div>}
+            </div>
             <div className="id">
               <span className="flag" aria-hidden>
                 {s.flag}
@@ -80,6 +99,9 @@ export default function Scoreboard() {
                     ) : next.kickoff ? (
                       ` · ${next.kickoff}`
                     ) : null}
+                    {next.kickoffISO && (
+                      <KickoffCountdown iso={next.kickoffISO} />
+                    )}
                   </div>
                 )}
                 {scorers.length > 0 && (

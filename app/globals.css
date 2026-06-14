@@ -228,6 +228,26 @@ body {
   font-family: var(--mono);
 }
 
+/* rank movement arrows */
+.movement {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  text-align: center;
+}
+.movement.up   { color: var(--pitch); }
+.movement.down { color: var(--card-red); }
+.movement.same { color: var(--ink-faint); }
+
+/* kickoff countdown */
+.kickoff-countdown {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber);
+}
+
 /* breakdown chips + points */
 .tail {
   display: flex;

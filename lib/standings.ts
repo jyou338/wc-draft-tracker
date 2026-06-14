@@ -27,9 +27,10 @@ export function resultPoints(r: Result): number {
   );
 }
 
-export function buildStandings(): Standing[] {
+export function buildStandings(customResults?: Result[]): Standing[] {
+  const data = customResults ?? results;
   const rows: Standing[] = draft.map((pick) => {
-    const teamResults = results.filter((r) => r.team === pick.team);
+    const teamResults = data.filter((r) => r.team === pick.team);
     const tally = {
       played: teamResults.length,
       goals: 0,
