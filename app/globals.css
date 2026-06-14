@@ -116,6 +116,27 @@ body {
   color: var(--ink-muted);
   margin-top: 5px;
 }
+.header-card-match-block + .header-card-match-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+.header-card-minute {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.header-card-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 5px;
+}
 
 .eyebrow {
   font-family: var(--mono);
@@ -293,6 +314,18 @@ body {
 .movement.up   { color: var(--pitch); }
 .movement.down { color: var(--card-red); }
 .movement.same { color: var(--ink-faint); }
+
+/* live points overlay */
+.live-pts-num {
+  color: var(--pitch);
+}
+.live-pts-delta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--pitch);
+  text-align: center;
+  margin-top: 1px;
+}
 
 /* kickoff countdown */
 .kickoff-countdown {

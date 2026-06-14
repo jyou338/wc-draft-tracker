@@ -5,11 +5,13 @@ import PointsChart from "@/components/PointsChart";
 import NextUpdate from "@/components/NextUpdate";
 import DevRefreshButton from "@/components/DevRefreshButton";
 import HeaderMatchCard from "@/components/HeaderMatchCard";
-import { draft, results, fixtures, lastUpdated } from "@/data/tournament";
+import LiveProvider from "@/components/LiveProvider";
+import { draft, results, fixtures, lastUpdated, liveMatches } from "@/data/tournament";
 import { SCORING, SCORING_LABELS, ASSUMED } from "@/lib/scoring";
 
 export default function Page() {
   return (
+    <LiveProvider initialLiveMatches={liveMatches}>
     <main className="wrap">
       {process.env.NODE_ENV === "development" && <DevRefreshButton />}
       <header className="masthead">
@@ -84,5 +86,6 @@ export default function Page() {
         </p>
       </footer>
     </main>
+    </LiveProvider>
   );
 }

@@ -135,5 +135,5 @@ export interface LiveMatch {
 }
 
 export const liveMatches: LiveMatch[] = [
-  { team: "Netherlands", opponent: "Japan", scoreFor: 0, scoreAgainst: 0, minute: "45'+3'" },
+  { team: "Netherlands", opponent: "Japan", scoreFor: 2, scoreAgainst: 1, minute: "84'" },
 ];

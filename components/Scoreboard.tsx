@@ -1,8 +1,10 @@
 import { buildStandings, type Standing } from "@/lib/standings";
-import { fixtures, results, liveMatches } from "@/data/tournament";
+import { fixtures, results } from "@/data/tournament";
 import MatchHistory from "@/components/MatchHistory";
 import LocalTime from "@/components/LocalTime";
 import KickoffCountdown from "@/components/KickoffCountdown";
+import LiveBadge from "@/components/LiveBadge";
+import LivePoints from "@/components/LivePoints";
 
 function stateClass(s: Standing): string {
   if (s.rank === 1 && s.points > 0) return "leader";
@@ -54,7 +56,6 @@ export default function Scoreboard() {
         const penaltyCards = s.yellowCards + s.redCards + s.ownGoals;
         const next = nextGame[s.team];
         const teamResults = results.filter((r) => r.team === s.team);
-        const liveMatch = liveMatches.find((m) => m.team === s.team);
         const scorers = topScorers(s.team);
         const moved = prevRank[s.team] !== undefined ? prevRank[s.team] - s.rank : null;
 
@@ -80,16 +81,7 @@ export default function Scoreboard() {
               <div className="names">
                 <div className="owner">
                   {s.owner} · {s.team}
-                  {liveMatch && (
-                    <span className="live-badge">
-                      LIVE {liveMatch.scoreFor}–{liveMatch.scoreAgainst}
-                      {liveMatch.minute && (
-                        <span className="live-clock">
-                          {" "}{liveMatch.minute}&prime;
-                        </span>
-                      )}
-                    </span>
-                  )}
+                  <LiveBadge team={s.team} />
                 </div>
                 {next && (
                   <div className="next-fixture">
@@ -120,10 +112,7 @@ export default function Scoreboard() {
                 <Stat value={s.cleanSheets} label="Clean sheets" />
                 <Stat value={penaltyCards} label="Penalties" />
               </div>
-              <div className="pts">
-                <div className="num">{s.points}</div>
-                <div className="lbl">pts</div>
-              </div>
+              <LivePoints team={s.team} basePoints={s.points} />
             </div>
             {teamResults.length > 0 && (
               <div className="history-row">
