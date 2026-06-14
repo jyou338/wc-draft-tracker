@@ -4,58 +4,24 @@ import Fixtures from "@/components/Fixtures";
 import PointsChart from "@/components/PointsChart";
 import NextUpdate from "@/components/NextUpdate";
 import DevRefreshButton from "@/components/DevRefreshButton";
-import {
-  draft,
-  results,
-  fixtures,
-  lastUpdated,
-} from "@/data/tournament";
+import { draft, results, fixtures, lastUpdated } from "@/data/tournament";
 import { SCORING, SCORING_LABELS, ASSUMED } from "@/lib/scoring";
 
-function latestResult() {
-  if (results.length === 0) return null;
-  return [...results].sort((a, b) => b.matchday - a.matchday)[0];
-}
-
 export default function Page() {
-  const latest = latestResult();
-  const flagOf = (team: string) =>
-    draft.find((d) => d.team === team)?.flag ?? "";
-
   return (
     <main className="wrap">
       {process.env.NODE_ENV === "development" && <DevRefreshButton />}
       <header className="masthead">
-        <div>
-          <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>
-          <h1 className="title">
-            World Cup
-            <br />
-            Draft Table
-          </h1>
-          <p className="subtitle">
-            Points scored by each manager&rsquo;s drafted nation, live through
-            the tournament.
-          </p>
-        </div>
-
-        {latest && (
-          <div className="bug">
-            <div>
-              <div className="bug-label">Latest result</div>
-              <div className="bug-teams">
-                <span className="flag" aria-hidden>
-                  {flagOf(latest.team)}
-                </span>
-                {latest.team}
-                <span className="bug-score">
-                  {latest.scoreFor}–{latest.scoreAgainst}
-                </span>
-                {latest.opponent}
-              </div>
-            </div>
-          </div>
-        )}
+        <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>
+        <h1 className="title">
+          World Cup
+          <br />
+          Draft Table
+        </h1>
+        <p className="subtitle">
+          Points scored by each manager&rsquo;s drafted nation, live through
+          the tournament.
+        </p>
       </header>
 
       <section className="section">
