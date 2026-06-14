@@ -1,6 +1,7 @@
 import Scoreboard from "@/components/Scoreboard";
 import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
+import NextUpdate from "@/components/NextUpdate";
 import {
   draft,
   results,
@@ -98,6 +99,7 @@ export default function Page() {
           and assists (+2) were confirmed by the organiser. Adjust these in{" "}
           <code>lib/scoring.ts</code> once your league confirms them and every
           total recalculates. &nbsp;<span className="stamp">{lastUpdated}</span>
+          &nbsp;·&nbsp;<NextUpdate />
         </p>
       </footer>
     </main>

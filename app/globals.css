@@ -443,6 +443,18 @@ body {
   color: var(--ink-muted);
 }
 
+.next-update {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.next-update b {
+  color: var(--pitch);
+  font-weight: 700;
+}
+
 @keyframes slidein {
   from {
     opacity: 0;
