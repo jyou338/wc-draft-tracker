@@ -2,6 +2,7 @@ import Scoreboard from "@/components/Scoreboard";
 import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
 import NextUpdate from "@/components/NextUpdate";
+import DevRefreshButton from "@/components/DevRefreshButton";
 import {
   draft,
   results,
@@ -22,6 +23,7 @@ export default function Page() {
 
   return (
     <main className="wrap">
+      {process.env.NODE_ENV === "development" && <DevRefreshButton />}
       <header className="masthead">
         <div>
           <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>

@@ -586,3 +586,58 @@ body {
     font-size: 26px;
   }
 }
+
+/* ── Dev refresh bar (development only) ────────────────────────── */
+.dev-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dev-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: #f7c948;
+  color: #0a1726;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.dev-refresh {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  transition: background 0.15s, color 0.15s;
+}
+.dev-refresh:hover:not(:disabled) {
+  background: var(--pitch-deep);
+  color: #fff;
+  border-color: var(--pitch-deep);
+}
+.dev-refresh.loading { opacity: 0.6; cursor: wait; }
+.dev-refresh.ok      { background: var(--pitch-deep); color: #fff; border-color: var(--pitch-deep); }
+.dev-refresh.error   { background: var(--card-red);   color: #fff; border-color: var(--card-red); }
+.dev-log {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  background: var(--bg-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  max-width: 340px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
