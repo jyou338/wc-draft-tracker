@@ -217,6 +217,12 @@ body {
   color: var(--ink-muted);
   margin-top: 1px;
 }
+.id .next-fixture {
+  font-size: 11px;
+  color: var(--pitch);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
 
 /* breakdown chips + points */
 .tail {
@@ -230,7 +236,7 @@ body {
 }
 .stat {
   text-align: center;
-  min-width: 26px;
+  min-width: 44px;
 }
 .stat .v {
   font-family: var(--mono);
@@ -368,6 +374,18 @@ body {
 }
 
 /* fixtures */
+.fixture-group {
+  margin-bottom: 16px;
+}
+.fixture-group-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
 .fixture {
   display: flex;
   align-items: center;
@@ -381,25 +399,28 @@ body {
 }
 .fixture .flag {
   font-size: 20px;
+  flex-shrink: 0;
+}
+.fixture-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .fixture .ft {
   font-family: var(--display);
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 16px;
+  font-size: 15px;
 }
 .fixture .vs {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-faint);
-  margin: 0 2px;
+  margin: 0 4px;
+  text-transform: none;
 }
-.fixture .opp {
-  font-size: 14px;
-  color: var(--ink-muted);
-}
-.fixture .who {
-  margin-left: auto;
+.fixture-meta {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-faint);

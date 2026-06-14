@@ -1,4 +1,5 @@
 import { buildStandings, type Standing } from "@/lib/standings";
+import { fixtures } from "@/data/tournament";
 
 function stateClass(s: Standing): string {
   if (s.rank === 1 && s.points > 0) return "leader";
@@ -17,10 +18,18 @@ function Stat({ value, label }: { value: number; label: string }) {
 
 export default function Scoreboard() {
   const standings = buildStandings();
+
+  // Build a quick lookup: team → next fixture
+  const nextGame: Record<string, (typeof fixtures)[0]> = {};
+  for (const f of fixtures) {
+    if (!nextGame[f.team]) nextGame[f.team] = f;
+  }
+
   return (
     <div className="board">
       {standings.map((s, i) => {
-        const cards = s.yellowCards + s.redCards + s.ownGoals;
+        const penaltyCards = s.yellowCards + s.redCards + s.ownGoals;
+        const next = nextGame[s.team];
         return (
           <div
             key={s.team}
@@ -38,14 +47,19 @@ export default function Scoreboard() {
                   {s.flag} {s.team}
                   {s.played > 0 ? ` · ${s.played} played` : " · yet to play"}
                 </div>
+                {next && (
+                  <div className="next-fixture">
+                    Next: {next.opponent}{next.kickoff ? ` · ${next.kickoff}` : ""}
+                  </div>
+                )}
               </div>
             </div>
             <div className="tail">
               <div className="breakdown">
-                <Stat value={s.goals} label="G" />
-                <Stat value={s.assists} label="A" />
-                <Stat value={s.cleanSheets} label="CS" />
-                <Stat value={cards} label="Crd" />
+                <Stat value={s.goals} label="Goals" />
+                <Stat value={s.assists} label="Assists" />
+                <Stat value={s.cleanSheets} label="Clean sheets" />
+                <Stat value={penaltyCards} label="Penalties" />
               </div>
               <div className="pts">
                 <div className="num">{s.points}</div>
