@@ -82,7 +82,7 @@ export const fixtures: Fixture[] = [
   { matchday: 1, team: "Colombia", opponent: "Uzbekistan", kickoff: "Thu 02:00 UTC", kickoffISO: "2026-06-18T02:00Z" },
   { matchday: 1, team: "England", opponent: "Croatia", kickoff: "Wed 20:00 UTC", kickoffISO: "2026-06-17T20:00Z" },
   { matchday: 1, team: "France", opponent: "Senegal", kickoff: "Tue 19:00 UTC", kickoffISO: "2026-06-16T19:00Z" },
-  { matchday: 1, team: "Germany", opponent: "Curaçao", kickoff: "Sun 17:00 UTC", kickoffISO: "2026-06-14T17:00Z" },
+  { matchday: 1, team: "Germany", opponent: "Ivory Coast", kickoff: "Sat 20:00 UTC", kickoffISO: "2026-06-20T20:00Z" },
   { matchday: 1, team: "Netherlands", opponent: "Japan", kickoff: "Sun 20:00 UTC", kickoffISO: "2026-06-14T20:00Z" },
   { matchday: 1, team: "Norway", opponent: "Iraq", kickoff: "Tue 22:00 UTC", kickoffISO: "2026-06-16T22:00Z" },
   { matchday: 1, team: "Portugal", opponent: "Congo DR", kickoff: "Wed 17:00 UTC", kickoffISO: "2026-06-17T17:00Z" },
@@ -93,7 +93,7 @@ export const fixtures: Fixture[] = [
   { matchday: 2, team: "Colombia", opponent: "Congo DR", kickoff: "Wed 02:00 UTC", kickoffISO: "2026-06-24T02:00Z" },
   { matchday: 2, team: "England", opponent: "Ghana", kickoff: "Tue 20:00 UTC", kickoffISO: "2026-06-23T20:00Z" },
   { matchday: 2, team: "France", opponent: "Iraq", kickoff: "Mon 21:00 UTC", kickoffISO: "2026-06-22T21:00Z" },
-  { matchday: 2, team: "Germany", opponent: "Ivory Coast", kickoff: "Sat 20:00 UTC", kickoffISO: "2026-06-20T20:00Z" },
+  { matchday: 2, team: "Germany", opponent: "Ecuador", kickoff: "Thu 20:00 UTC", kickoffISO: "2026-06-25T20:00Z" },
   { matchday: 2, team: "Morocco", opponent: "Scotland", kickoff: "Fri 22:00 UTC", kickoffISO: "2026-06-19T22:00Z" },
   { matchday: 2, team: "Netherlands", opponent: "Sweden", kickoff: "Sat 17:00 UTC", kickoffISO: "2026-06-20T17:00Z" },
   { matchday: 2, team: "Norway", opponent: "Senegal", kickoff: "Tue 00:00 UTC", kickoffISO: "2026-06-23T00:00Z" },
@@ -105,7 +105,6 @@ export const fixtures: Fixture[] = [
   { matchday: 3, team: "Colombia", opponent: "Portugal", kickoff: "Sat 23:30 UTC", kickoffISO: "2026-06-27T23:30Z" },
   { matchday: 3, team: "England", opponent: "Panama", kickoff: "Sat 21:00 UTC", kickoffISO: "2026-06-27T21:00Z" },
   { matchday: 3, team: "France", opponent: "Norway", kickoff: "Fri 19:00 UTC", kickoffISO: "2026-06-26T19:00Z" },
-  { matchday: 3, team: "Germany", opponent: "Ecuador", kickoff: "Thu 20:00 UTC", kickoffISO: "2026-06-25T20:00Z" },
   { matchday: 3, team: "Morocco", opponent: "Haiti", kickoff: "Wed 22:00 UTC", kickoffISO: "2026-06-24T22:00Z" },
   { matchday: 3, team: "Netherlands", opponent: "Tunisia", kickoff: "Thu 23:00 UTC", kickoffISO: "2026-06-25T23:00Z" },
   { matchday: 3, team: "Norway", opponent: "France", kickoff: "Fri 19:00 UTC", kickoffISO: "2026-06-26T19:00Z" },
@@ -124,5 +123,5 @@ export interface LiveMatch {
 }
 
 export const liveMatches: LiveMatch[] = [
-
+  { team: "Germany", opponent: "Curaçao", scoreFor: 3, scoreAgainst: 1, minute: "45'+5'" },
 ];
