@@ -162,13 +162,17 @@ body {
 .row {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: 14px;
   background: var(--surface);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   padding: 13px 16px;
   animation: slidein 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.history-row {
+  grid-column: 1 / -1;
+  padding: 0 2px 4px;
 }
 .row:hover {
   border-color: var(--line);
@@ -371,6 +375,75 @@ body {
   margin-left: auto;
   color: var(--ink);
   background: var(--surface-2);
+}
+.tag.bad {
+  color: var(--card-red);
+  border-color: rgba(255, 90, 95, 0.3);
+}
+
+/* ── Match history rollout ──────────────────────────────────────── */
+.history-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  padding: 6px 0;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s;
+}
+.history-toggle:hover {
+  color: var(--ink-muted);
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+.history-entry {
+  background: var(--bg-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.history-match {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.history-score {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  min-width: 28px;
+}
+.history-opponent {
+  font-size: 13px;
+  color: var(--ink-muted);
+  flex: 1;
+}
+.history-pts {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: auto;
+}
+.history-pts.pos { color: var(--pitch); }
+.history-pts.neg { color: var(--card-red); }
+.history-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 /* fixtures */

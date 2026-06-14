@@ -1,5 +1,6 @@
 import { buildStandings, type Standing } from "@/lib/standings";
-import { fixtures } from "@/data/tournament";
+import { fixtures, results } from "@/data/tournament";
+import MatchHistory from "@/components/MatchHistory";
 
 function stateClass(s: Standing): string {
   if (s.rank === 1 && s.points > 0) return "leader";
@@ -30,6 +31,7 @@ export default function Scoreboard() {
       {standings.map((s, i) => {
         const penaltyCards = s.yellowCards + s.redCards + s.ownGoals;
         const next = nextGame[s.team];
+        const teamResults = results.filter((r) => r.team === s.team);
         return (
           <div
             key={s.team}
@@ -66,6 +68,11 @@ export default function Scoreboard() {
                 <div className="lbl">pts</div>
               </div>
             </div>
+            {teamResults.length > 0 && (
+              <div className="history-row">
+                <MatchHistory results={teamResults} owner={s.owner} />
+              </div>
+            )}
           </div>
         );
       })}
