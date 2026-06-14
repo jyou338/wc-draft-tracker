@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { draft, results } from "@/data/tournament";
 import { resultPoints } from "@/lib/standings";
 
@@ -30,6 +30,11 @@ interface HoverState {
 
 export default function PointsChart() {
   const [hovered, setHovered] = useState<HoverState | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch(window.matchMedia("(hover: none)").matches);
+  }, []);
 
   const matchdays = [...new Set(results.map((r) => r.matchday))].sort(
     (a, b) => a - b,
@@ -51,8 +56,8 @@ export default function PointsChart() {
 
   const maxPts = Math.max(...series.flatMap((s) => s.pts), 1);
 
-  const W = 640, H = 180;
-  const padL = 36, padR = 16, padT = 12, padB = 28;
+  const W = 640, H = 200;
+  const padL = 36, padR = 16, padT = 14, padB = 30;
   const cw = W - padL - padR;
   const ch = H - padT - padB;
 
@@ -63,37 +68,44 @@ export default function PointsChart() {
 
   const yOf = (p: number) => padT + ch - (p / maxPts) * ch;
 
-  const DOT_HIT = 14;
-  const LINE_HIT = 7;
+  // Larger targets and dots on touch devices
+  const DOT_R = isTouch ? 8 : 5;
+  const DOT_R_HOV = isTouch ? 11 : 7;
+  const DOT_HIT = isTouch ? 28 : 14;
+  const LINE_HIT = isTouch ? 14 : 7;
 
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const svgX = ((e.clientX - rect.left) / rect.width) * W;
-    const svgY = ((e.clientY - rect.top) / rect.height) * H;
-
+  function getHitTeams(clientX: number, clientY: number, rect: DOMRect): string[] {
+    const svgX = ((clientX - rect.left) / rect.width) * W;
+    const svgY = ((clientY - rect.top) / rect.height) * H;
     const found: string[] = [];
     for (const s of series) {
       let hit = false;
       for (let i = 0; i < s.pts.length; i++) {
-        if (Math.hypot(xOf(i) - svgX, yOf(s.pts[i]) - svgY) <= DOT_HIT) {
-          hit = true;
-          break;
-        }
+        if (Math.hypot(xOf(i) - svgX, yOf(s.pts[i]) - svgY) <= DOT_HIT) { hit = true; break; }
       }
       if (!hit) {
         for (let i = 0; i < s.pts.length - 1; i++) {
-          if (
-            ptSegDist(svgX, svgY, xOf(i), yOf(s.pts[i]), xOf(i + 1), yOf(s.pts[i + 1])) <= LINE_HIT
-          ) {
-            hit = true;
-            break;
+          if (ptSegDist(svgX, svgY, xOf(i), yOf(s.pts[i]), xOf(i + 1), yOf(s.pts[i + 1])) <= LINE_HIT) {
+            hit = true; break;
           }
         }
       }
       if (hit) found.push(s.team);
     }
+    return found;
+  }
 
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const found = getHitTeams(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect());
     setHovered(found.length > 0 ? { teams: found, clientX: e.clientX, clientY: e.clientY } : null);
+  }
+
+  function handleTouch(e: React.TouchEvent<SVGSVGElement>) {
+    e.preventDefault();
+    const touch = e.touches[0] ?? e.changedTouches[0];
+    if (!touch) return;
+    const found = getHitTeams(touch.clientX, touch.clientY, e.currentTarget.getBoundingClientRect());
+    setHovered(found.length > 0 ? { teams: found, clientX: touch.clientX, clientY: touch.clientY } : null);
   }
 
   const hoveredTeams = new Set(hovered?.teams ?? []);
@@ -119,7 +131,10 @@ export default function PointsChart() {
         aria-label="Points over time by manager"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
-        style={{ cursor: "crosshair" }}
+        onTouchStart={handleTouch}
+        onTouchMove={handleTouch}
+        onTouchEnd={() => setHovered(null)}
+        style={{ cursor: "crosshair", touchAction: "none" }}
       >
         {yTicks.map((v) => (
           <line key={v} x1={padL} x2={W - padR} y1={yOf(v)} y2={yOf(v)}
@@ -132,7 +147,7 @@ export default function PointsChart() {
           </text>
         ))}
         {matchdays.map((md, i) => (
-          <text key={md} x={xOf(i)} y={H - 6} textAnchor="middle"
+          <text key={md} x={xOf(i)} y={H - 8} textAnchor="middle"
             fill="var(--ink-faint)" fontSize="10" fontFamily="var(--mono)">
             MD{md}
           </text>
@@ -149,26 +164,25 @@ export default function PointsChart() {
             <g key={s.team}>
               {s.pts.length > 1 && (
                 <>
-                  <polyline points={pointsStr} fill="none" stroke="transparent" strokeWidth="14" />
+                  <polyline points={pointsStr} fill="none" stroke="transparent" strokeWidth="20" />
                   <polyline points={pointsStr} fill="none" stroke={s.color}
                     strokeWidth={isHov ? 3 : 2} opacity={alpha} />
                 </>
               )}
               {s.pts.map((p, i) => (
-                <circle key={i} cx={xOf(i)} cy={yOf(p)} r={isHov ? 6 : 4}
-                  fill={s.color} opacity={faded ? 0.07 : lastPts > 0 ? 1 : 0.25} />
+                <circle key={i} cx={xOf(i)} cy={yOf(p)}
+                  r={isHov ? DOT_R_HOV : DOT_R}
+                  fill={s.color}
+                  opacity={faded ? 0.07 : lastPts > 0 ? 1 : 0.3} />
               ))}
             </g>
           );
         })}
       </svg>
 
-      {/* Fixed tooltip — floats above all page content */}
       {hovered && tooltipMatches.length > 0 && (
-        <div
-          className="chart-tooltip"
-          style={{ left: hovered.clientX + 16, top: hovered.clientY - 8 }}
-        >
+        <div className="chart-tooltip"
+          style={{ left: hovered.clientX + 16, top: hovered.clientY - 8 }}>
           {tooltipMatches.map((s) => (
             <div key={s.team} style={{ color: s.color }}>
               {s.flag} {s.owner} · {s.pts[s.pts.length - 1]} pts
