@@ -1,23 +1,54 @@
+"use client";
+
+import { useState } from "react";
 import { draft, results } from "@/data/tournament";
 import { resultPoints } from "@/lib/standings";
 import { SCORING } from "@/lib/scoring";
 
-const flagOf = (team: string) =>
-  draft.find((d) => d.team === team)?.flag ?? "";
+const flagOf = (team: string) => draft.find((d) => d.team === team)?.flag ?? "";
 const ownerOf = (team: string) =>
   draft.find((d) => d.team === team)?.owner ?? "";
 
 const pts = (val: number) => (val > 0 ? `+${val}` : `${val}`);
 
 export default function MatchLog() {
+  const matchdays = [...new Set(results.map((r) => r.matchday))].sort(
+    (a, b) => a - b,
+  );
+  const [tab, setTab] = useState<number | "all">(
+    matchdays[matchdays.length - 1] ?? "all",
+  );
+
   if (results.length === 0) {
     return <div className="card">No matches logged yet. They start soon.</div>;
   }
-  // newest first
-  const ordered = [...results].sort((a, b) => b.matchday - a.matchday);
+
+  const filtered =
+    tab === "all"
+      ? [...results].sort((a, b) => b.matchday - a.matchday)
+      : [...results.filter((r) => r.matchday === tab)];
+
   return (
     <>
-      {ordered.map((r, i) => {
+      <div className="tab-bar">
+        <button
+          className={`tab-btn${tab === "all" ? " active" : ""}`}
+          onClick={() => setTab("all")}
+        >
+          All
+        </button>
+        {matchdays.map((md) => (
+          <button
+            key={md}
+            className={`tab-btn${tab === md ? " active" : ""}`}
+            onClick={() => setTab(md)}
+          >
+            MD{md}
+          </button>
+        ))}
+      </div>
+
+      {filtered.map((r, i) => {
         const total = resultPoints(r);
         return (
           <div className="card" key={`${r.team}-${r.matchday}-${i}`}>
@@ -42,11 +73,15 @@ export default function MatchLog() {
               ))}
               {r.assists > 0 && (
                 <span className="tag assist">
-                  🅰 {r.assists} {r.assists === 1 ? "assist" : "assists"} {pts(r.assists * SCORING.assist)}
+                  🅰 {r.assists}{" "}
+                  {r.assists === 1 ? "assist" : "assists"}{" "}
+                  {pts(r.assists * SCORING.assist)}
                 </span>
               )}
               {r.cleanSheet && (
-                <span className="tag">🧤 Clean sheet {pts(SCORING.cleanSheet)}</span>
+                <span className="tag">
+                  🧤 Clean sheet {pts(SCORING.cleanSheet)}
+                </span>
               )}
               {r.yellowCards.map((y, k) => (
                 <span className="tag" key={`y${k}`}>

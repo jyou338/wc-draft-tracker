@@ -1,4 +1,5 @@
 import { draft, fixtures } from "@/data/tournament";
+import LocalTime from "@/components/LocalTime";
 
 const flagOf = (team: string) =>
   draft.find((d) => d.team === team)?.flag ?? "";
@@ -40,7 +41,12 @@ export default function Fixtures() {
                   {f.team} <span className="vs">vs</span> {f.opponent}
                 </span>
                 <span className="fixture-meta">
-                  {ownerOf(f.team)}{f.kickoff ? ` · ${f.kickoff}` : ""}
+                  {ownerOf(f.team)}
+                  {f.kickoffISO ? (
+                    <> · <LocalTime iso={f.kickoffISO} fallback={f.kickoff ?? ""} /></>
+                  ) : f.kickoff ? (
+                    ` · ${f.kickoff}`
+                  ) : null}
                 </span>
               </div>
             </div>

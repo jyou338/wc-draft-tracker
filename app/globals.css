@@ -587,6 +587,137 @@ body {
   }
 }
 
+/* ── Live badge ─────────────────────────────────────────────────── */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--pitch);
+  background: rgba(43, 217, 128, 0.1);
+  border: 1px solid rgba(43, 217, 128, 0.4);
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+.live-clock {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ── Top scorers ────────────────────────────────────────────────── */
+.top-scorers {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top-scorers::before {
+  content: "⚽ ";
+}
+
+/* ── Matchday tab bar ───────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: var(--bg-2);
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.tab-btn:hover {
+  color: var(--ink-muted);
+  border-color: var(--line);
+}
+.tab-btn.active {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--pitch-deep);
+}
+
+/* ── Points chart ───────────────────────────────────────────────── */
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+}
+.chart-svg {
+  width: 100%;
+  overflow: visible;
+  display: block;
+}
+.chart-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.chart-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.chart-owner {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chart-cur-pts {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  flex: none;
+}
+.chart-tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
 /* ── Dev refresh bar (development only) ────────────────────────── */
 .dev-bar {
   position: fixed;

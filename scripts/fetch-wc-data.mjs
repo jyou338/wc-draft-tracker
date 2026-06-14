@@ -101,6 +101,7 @@ async function main() {
 
   const results = [];
   const fixturesOut = [];
+  const liveMatches = [];
   // Track group-stage games per team to assign matchday 1/2/3
   const teamCompletedCount = {};
   const teamFixtureCount = {};
@@ -112,6 +113,7 @@ async function main() {
     const competitors = competition.competitors ?? [];
     const details = competition.details ?? [];
     const isCompleted = competition.status?.type?.completed === true;
+    const isLive = competition.status?.type?.state === "in";
     const isGroupStage = (event.season?.slug ?? "") === "group-stage";
 
     const draftedComps = competitors.filter(c => isDrafted(c.team.displayName));
@@ -172,6 +174,14 @@ async function main() {
           redCards,
           ownGoals,
         });
+      } else if (isLive) {
+        liveMatches.push({
+          team: ourName,
+          opponent: opponentName,
+          scoreFor: parseInt(comp.score ?? "0"),
+          scoreAgainst: parseInt(opponentComp?.score ?? "0"),
+          minute: competition.status?.displayClock ?? "",
+        });
       } else {
         let matchday;
         if (isGroupStage) {
@@ -188,6 +198,7 @@ async function main() {
           team: ourName,
           opponent: opponentName,
           kickoff: fmtKickoff(event.date),
+          kickoffISO: event.date ?? undefined,
         });
       }
     }
@@ -225,7 +236,12 @@ async function main() {
 
   function fixtureToTs(f) {
     const kickoffPart = f.kickoff ? `, kickoff: ${JSON.stringify(f.kickoff)}` : "";
-    return `  { matchday: ${f.matchday}, team: ${JSON.stringify(f.team)}, opponent: ${JSON.stringify(f.opponent)}${kickoffPart} },`;
+    const kickoffISOPart = f.kickoffISO ? `, kickoffISO: ${JSON.stringify(f.kickoffISO)}` : "";
+    return `  { matchday: ${f.matchday}, team: ${JSON.stringify(f.team)}, opponent: ${JSON.stringify(f.opponent)}${kickoffPart}${kickoffISOPart} },`;
+  }
+
+  function liveMatchToTs(m) {
+    return `  { team: ${JSON.stringify(m.team)}, opponent: ${JSON.stringify(m.opponent)}, scoreFor: ${m.scoreFor}, scoreAgainst: ${m.scoreAgainst}, minute: ${JSON.stringify(m.minute)} },`;
   }
 
   const output = `// ─────────────────────────────────────────────────────────────────────────────
@@ -267,6 +283,7 @@ export interface Fixture {
   team: string;
   opponent: string;
   kickoff?: string;
+  kickoffISO?: string;
 }
 
 export const fixtures: Fixture[] = [
@@ -274,6 +291,18 @@ ${fixturesOut.map(fixtureToTs).join("\n")}
 ];
 
 export const lastUpdated = "Auto-updated ${now} via ESPN";
+
+export interface LiveMatch {
+  team: string;
+  opponent: string;
+  scoreFor: number;
+  scoreAgainst: number;
+  minute: string;
+}
+
+export const liveMatches: LiveMatch[] = [
+${liveMatches.map(liveMatchToTs).join("\n")}
+];
 `;
 
   const outPath = join(ROOT, "data", "tournament.ts");

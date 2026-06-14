@@ -1,6 +1,7 @@
 import Scoreboard from "@/components/Scoreboard";
 import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
+import PointsChart from "@/components/PointsChart";
 import NextUpdate from "@/components/NextUpdate";
 import DevRefreshButton from "@/components/DevRefreshButton";
 import {
@@ -63,6 +64,14 @@ export default function Page() {
           <span className="count">Matchday {Math.max(...results.map((r) => r.matchday), 1)}</span>
         </div>
         <Scoreboard />
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2>Points Race</h2>
+          <span className="count">Cumulative points per manager</span>
+        </div>
+        <PointsChart />
       </section>
 
       <div className="grid2">
