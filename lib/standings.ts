@@ -19,7 +19,7 @@ export interface Standing {
 export function resultPoints(r: Result): number {
   return (
     r.goals.length * SCORING.goal +
-    r.assists.length * SCORING.assist +
+    r.assists * SCORING.assist +
     (r.cleanSheet ? SCORING.cleanSheet : 0) +
     r.yellowCards.length * SCORING.yellowCard +
     r.redCards.length * SCORING.redCard +
@@ -42,7 +42,7 @@ export function buildStandings(): Standing[] {
     };
     for (const r of teamResults) {
       tally.goals += r.goals.length;
-      tally.assists += r.assists.length;
+      tally.assists += r.assists;
       tally.cleanSheets += r.cleanSheet ? 1 : 0;
       tally.yellowCards += r.yellowCards.length;
       tally.redCards += r.redCards.length;

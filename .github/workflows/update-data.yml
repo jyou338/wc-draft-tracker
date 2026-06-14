@@ -22,8 +22,6 @@ jobs:
           node-version: 20
 
       - name: Fetch latest World Cup data
-        env:
-          FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
         run: node scripts/fetch-wc-data.mjs
 
       - name: Commit & push if data changed

@@ -15,8 +15,6 @@ export default function DevRefreshButton() {
       if (json.ok) {
         setState("ok");
         setLog(json.output ?? "Done.");
-        // Reload the page after a short delay so Next.js picks up the new data file
-        setTimeout(() => window.location.reload(), 800);
       } else {
         setState("error");
         setLog(json.detail || json.error || "Unknown error");
@@ -41,6 +39,11 @@ export default function DevRefreshButton() {
         {state === "error"   && "✗ Error — see below"}
       </button>
       {log && <pre className="dev-log">{log}</pre>}
+      {state === "ok" && (
+        <button className="dev-refresh" onClick={() => window.location.reload()}>
+          ↺ Reload to see changes
+        </button>
+      )}
     </div>
   );
 }
