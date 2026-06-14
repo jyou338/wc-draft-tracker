@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  fetch-wc-data.mjs
-//  Fetches live 2026 World Cup data from API-Football and rewrites
+//  Fetches live 2026 World Cup data from football-data.org and rewrites
 //  data/tournament.ts so Vercel can redeploy a fresh static build.
 //
-//  Run locally:   API_FOOTBALL_KEY=xxx node scripts/fetch-wc-data.mjs
-//  In CI:         the key comes from the GitHub secret API_FOOTBALL_KEY
+//  Run locally:   FOOTBALL_DATA_KEY=xxx node scripts/fetch-wc-data.mjs
+//  In CI:         the key comes from the GitHub secret FOOTBALL_DATA_KEY
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { writeFileSync } from "fs";
@@ -16,19 +16,16 @@ const ROOT = join(__dirname, "..");
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const API_KEY = process.env.API_FOOTBALL_KEY;
+const API_KEY = process.env.FOOTBALL_DATA_KEY;
 if (!API_KEY) {
-  console.error("❌  API_FOOTBALL_KEY env var is not set.");
+  console.error("❌  FOOTBALL_DATA_KEY env var is not set.");
   process.exit(1);
 }
 
-// FIFA World Cup 2026 — league ID 1 on API-Football (same as all prior WCs).
-// If this ever changes, update this constant.
-const WC_LEAGUE_ID = 1;
-const SEASON = 2026;
+const BASE = "https://api.football-data.org/v4";
 
-// Our 12 drafted teams (must match API-Football team names exactly).
-// See TEAM_NAME_MAP below if the API uses a different spelling.
+// Our 12 drafted teams. Must match how football-data.org spells team names.
+// See TEAM_NAME_MAP below for any mismatches.
 const DRAFTED_TEAMS = [
   "Brazil",
   "Morocco",
@@ -44,7 +41,7 @@ const DRAFTED_TEAMS = [
   "Colombia",
 ];
 
-// Draft picks (owner + flag — never changes mid-tournament).
+// Draft picks — owner + flag. Never changes mid-tournament.
 const DRAFT = [
   { team: "Brazil",      owner: "Sammy",   flag: "🇧🇷" },
   { team: "Morocco",     owner: "James",   flag: "🇲🇦" },
@@ -60,33 +57,23 @@ const DRAFT = [
   { team: "Colombia",    owner: "Nathan",  flag: "🇨🇴" },
 ];
 
-// If the API spells a team name differently from ours, map it here.
-// e.g. "Korea Republic" -> "South Korea"
+// Map football-data.org team names → our names if they differ.
 const API_TO_OUR_NAME = {
-  // Add entries as needed:
-  // "Korea Republic": "South Korea",
+  // e.g. "Korea Republic": "South Korea"
 };
 
-// ── API helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function apiGet(path) {
-  const url = `https://v3.football.api-sports.io${path}`;
-  const res = await fetch(url, {
-    headers: {
-      "x-apisports-key": API_KEY,
-    },
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "X-Auth-Token": API_KEY },
   });
   if (!res.ok) {
-    throw new Error(`API error ${res.status} for ${url}`);
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status} for ${path}: ${text}`);
   }
-  const json = await res.json();
-  if (json.errors && Object.keys(json.errors).length > 0) {
-    throw new Error(`API returned errors: ${JSON.stringify(json.errors)}`);
-  }
-  return json.response;
+  return res.json();
 }
-
-// ── Name normalisation ────────────────────────────────────────────────────────
 
 function normalise(apiName) {
   return API_TO_OUR_NAME[apiName] ?? apiName;
@@ -96,108 +83,100 @@ function isDrafted(apiTeamName) {
   return DRAFTED_TEAMS.includes(normalise(apiTeamName));
 }
 
-// ── Round → matchday number ───────────────────────────────────────────────────
-// API-Football returns strings like "Group Stage - 1", "Round of 16", etc.
+// "GROUP_STAGE" + matchday 1 → 1, "ROUND_OF_16" → 5, etc.
+function stageToMatchday(stage, matchday) {
+  if (stage === "GROUP_STAGE") return matchday ?? 1;
+  const map = {
+    ROUND_OF_32: 4,
+    ROUND_OF_16: 5,
+    QUARTER_FINALS: 6,
+    SEMI_FINALS: 7,
+    THIRD_PLACE: 8,
+    FINAL: 9,
+  };
+  return map[stage] ?? 99;
+}
 
-function roundToMatchday(round) {
-  if (!round) return 1;
-  const m = round.match(/Group Stage\s*[-–]\s*(\d+)/i);
-  if (m) return parseInt(m[1], 10);
-  if (/round of 32/i.test(round)) return 4;
-  if (/round of 16/i.test(round)) return 5;
-  if (/quarter.?final/i.test(round)) return 6;
-  if (/semi.?final/i.test(round)) return 7;
-  if (/3rd/i.test(round) || /third/i.test(round)) return 8;
-  if (/final/i.test(round)) return 9;
-  return 99;
+function fmtKickoff(utcDate) {
+  if (!utcDate) return undefined;
+  const d = new Date(utcDate);
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${days[d.getUTCDay()]} ${hh}:${mm} UTC`;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(`Fetching fixtures for league ${WC_LEAGUE_ID}, season ${SEASON}…`);
+  console.log("Fetching WC 2026 matches from football-data.org…");
 
-  const allFixtures = await apiGet(
-    `/fixtures?league=${WC_LEAGUE_ID}&season=${SEASON}`
-  );
+  // All matches for the 2026 World Cup
+  const data = await apiGet("/competitions/WC/matches?season=2026");
+  const allMatches = data.matches ?? [];
+  console.log(`  Total matches: ${allMatches.length}`);
 
-  console.log(`  Total fixtures returned: ${allFixtures.length}`);
-
-  // Split into finished vs upcoming
-  const finished = allFixtures.filter((f) =>
-    ["FT", "AET", "PEN"].includes(f.fixture.status.short)
-  );
-  const upcoming = allFixtures.filter((f) =>
-    ["NS", "TBD", "PST"].includes(f.fixture.status.short)
+  const finished = allMatches.filter((m) => m.status === "FINISHED");
+  const upcoming = allMatches.filter((m) =>
+    ["SCHEDULED", "TIMED"].includes(m.status)
   );
 
   console.log(`  Finished: ${finished.length}, Upcoming: ${upcoming.length}`);
 
   // ── Results ───────────────────────────────────────────────────────────────
 
-  // Only matches where at least one side is a drafted team
   const relevantFinished = finished.filter(
-    (f) => isDrafted(f.teams.home.name) || isDrafted(f.teams.away.name)
+    (m) => isDrafted(m.homeTeam.name) || isDrafted(m.awayTeam.name)
   );
+  console.log(`  Relevant finished: ${relevantFinished.length}`);
 
-  console.log(
-    `  Relevant finished matches (involving drafted teams): ${relevantFinished.length}`
-  );
-
+  // football-data.org includes goals + bookings inline on each match object.
+  // We need per-match detail for scorers — fetch each individually.
   const results = [];
 
-  for (const f of relevantFinished) {
-    const fixtureId = f.fixture.id;
-    const homeApi = f.teams.home.name;
-    const awayApi = f.teams.away.name;
+  for (const m of relevantFinished) {
+    const detail = await apiGet(`/matches/${m.id}`);
+    const homeApi = detail.homeTeam.name;
+    const awayApi = detail.awayTeam.name;
     const home = normalise(homeApi);
     const away = normalise(awayApi);
-    const homeScore = f.goals.home ?? 0;
-    const awayScore = f.goals.away ?? 0;
-    const matchday = roundToMatchday(f.league.round);
+    const homeScore = detail.score.fullTime.home ?? 0;
+    const awayScore = detail.score.fullTime.away ?? 0;
+    const matchday = stageToMatchday(detail.stage, detail.matchday);
 
-    // Fetch events for this fixture
-    let events = [];
-    try {
-      events = await apiGet(`/fixtures/events?fixture=${fixtureId}`);
-    } catch (e) {
-      console.warn(`  ⚠  Could not fetch events for fixture ${fixtureId}: ${e.message}`);
-    }
+    const goals = detail.goals ?? [];
+    const bookings = detail.bookings ?? [];
 
-    // Helper: build a Result object for one drafted side
     function buildResult(ourTeam, opponentTeam, scoreFor, scoreAgainst) {
-      const goals = [];
-      const assists = [];
-      const yellowCards = [];
-      const redCards = [];
-      const ownGoals = [];
+      const ourGoals = [];
+      const ourAssists = [];
+      const ourYellows = [];
+      const ourReds = [];
+      const ourOwnGoals = [];
 
-      for (const ev of events) {
-        const evTeam = normalise(ev.team.name);
-        const playerName = ev.player?.name ?? "";
-        const assistName = ev.assist?.name ?? "";
-
-        if (ev.type === "Goal") {
-          if (ev.detail === "Own Goal") {
-            // Own goal is scored for the OTHER team — it hurts the team who conceded
-            if (evTeam !== ourTeam) {
-              // opponent scored an OG → counts as our goal (no scorer to log)
-            } else {
-              // WE scored an OG → penalty for us
-              ownGoals.push(playerName);
-            }
+      for (const g of goals) {
+        const scorerTeam = normalise(g.team?.name ?? "");
+        if (g.type === "OWN_GOAL") {
+          // Own goal: the team listed is the one who scored it against themselves
+          if (scorerTeam === ourTeam) {
+            ourOwnGoals.push(g.scorer?.name ?? "Unknown");
           } else {
-            // Normal goal or penalty
-            if (evTeam === ourTeam) {
-              goals.push(playerName);
-              if (assistName) assists.push(assistName);
-            }
+            // Opponent own goal = free goal for us, no scorer to log
           }
-        } else if (ev.type === "Card") {
-          if (evTeam === ourTeam) {
-            if (ev.detail === "Yellow Card") yellowCards.push(playerName);
-            if (ev.detail === "Red Card" || ev.detail === "Second Yellow") redCards.push(playerName);
+        } else {
+          if (scorerTeam === ourTeam) {
+            ourGoals.push(g.scorer?.name ?? "Unknown");
+            if (g.assist?.name) ourAssists.push(g.assist.name);
           }
+        }
+      }
+
+      for (const b of bookings) {
+        const bookedTeam = normalise(b.team?.name ?? "");
+        if (bookedTeam === ourTeam) {
+          if (b.card === "YELLOW_CARD") ourYellows.push(b.player?.name ?? "Unknown");
+          if (b.card === "RED_CARD" || b.card === "YELLOW_RED_CARD")
+            ourReds.push(b.player?.name ?? "Unknown");
         }
       }
 
@@ -209,60 +188,44 @@ async function main() {
         opponent: opponentTeam,
         scoreFor,
         scoreAgainst,
-        goals,
-        assists,
+        goals: ourGoals,
+        assists: ourAssists,
         cleanSheet,
-        yellowCards,
-        redCards,
-        ownGoals,
+        yellowCards: ourYellows,
+        redCards: ourReds,
+        ownGoals: ourOwnGoals,
       };
     }
 
-    if (isDrafted(homeApi)) {
-      results.push(buildResult(home, away, homeScore, awayScore));
-    }
-    if (isDrafted(awayApi)) {
-      results.push(buildResult(away, home, awayScore, homeScore));
-    }
+    if (isDrafted(homeApi)) results.push(buildResult(home, away, homeScore, awayScore));
+    if (isDrafted(awayApi)) results.push(buildResult(away, home, awayScore, homeScore));
   }
 
   // ── Fixtures ──────────────────────────────────────────────────────────────
 
   const relevantUpcoming = upcoming.filter(
-    (f) => isDrafted(f.teams.home.name) || isDrafted(f.teams.away.name)
+    (m) => isDrafted(m.homeTeam.name) || isDrafted(m.awayTeam.name)
   );
 
   const fixturesOut = [];
 
-  for (const f of relevantUpcoming) {
-    const home = normalise(f.teams.home.name);
-    const away = normalise(f.teams.away.name);
-    const matchday = roundToMatchday(f.league.round);
+  for (const m of relevantUpcoming) {
+    const home = normalise(m.homeTeam.name);
+    const away = normalise(m.awayTeam.name);
+    const matchday = stageToMatchday(m.stage, m.matchday);
+    const kickoff = fmtKickoff(m.utcDate);
 
-    // Format kickoff time from UTC timestamp
-    let kickoff = undefined;
-    if (f.fixture.date) {
-      const d = new Date(f.fixture.date);
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const hh = String(d.getUTCHours()).padStart(2, "0");
-      const mm = String(d.getUTCMinutes()).padStart(2, "0");
-      kickoff = `${days[d.getUTCDay()]} ${hh}:${mm} UTC`;
-    }
-
-    if (isDrafted(f.teams.home.name)) {
+    if (isDrafted(m.homeTeam.name))
       fixturesOut.push({ matchday, team: home, opponent: away, kickoff });
-    }
-    if (isDrafted(f.teams.away.name)) {
+    if (isDrafted(m.awayTeam.name))
       fixturesOut.push({ matchday, team: away, opponent: home, kickoff });
-    }
   }
 
-  // Sort fixtures by matchday then team name
   fixturesOut.sort((a, b) => a.matchday - b.matchday || a.team.localeCompare(b.team));
 
   // ── Generate tournament.ts ────────────────────────────────────────────────
 
-  const now = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const now = new Date().toISOString().slice(0, 10);
 
   const draftTs = DRAFT.map(
     (p) =>
@@ -270,7 +233,7 @@ async function main() {
   ).join("\n");
 
   function resultToTs(r) {
-    const lines = [
+    return [
       `  {`,
       `    matchday: ${r.matchday},`,
       `    team: ${JSON.stringify(r.team)},`,
@@ -284,8 +247,7 @@ async function main() {
       `    redCards: ${JSON.stringify(r.redCards)},`,
       `    ownGoals: ${JSON.stringify(r.ownGoals)},`,
       `  },`,
-    ];
-    return lines.join("\n");
+    ].join("\n");
   }
 
   function fixtureToTs(f) {
@@ -293,13 +255,10 @@ async function main() {
     return `  { matchday: ${f.matchday}, team: ${JSON.stringify(f.team)}, opponent: ${JSON.stringify(f.opponent)}${kickoffPart} },`;
   }
 
-  const resultsTs = results.map(resultToTs).join("\n");
-  const fixturesTs = fixturesOut.map(fixtureToTs).join("\n");
-
   const output = `// ─────────────────────────────────────────────────────────────────────────────
 //  AUTO-GENERATED by scripts/fetch-wc-data.mjs — do not edit by hand.
 //  Last fetched: ${now}
-//  To update manually, run:  API_FOOTBALL_KEY=xxx node scripts/fetch-wc-data.mjs
+//  Source: football-data.org /competitions/WC
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface DraftPick {
@@ -327,7 +286,7 @@ export interface Result {
 }
 
 export const results: Result[] = [
-${resultsTs}
+${results.map(resultToTs).join("\n")}
 ];
 
 export interface Fixture {
@@ -338,10 +297,10 @@ export interface Fixture {
 }
 
 export const fixtures: Fixture[] = [
-${fixturesTs}
+${fixturesOut.map(fixtureToTs).join("\n")}
 ];
 
-export const lastUpdated = "Auto-updated ${now} via API-Football";
+export const lastUpdated = "Auto-updated ${now} via football-data.org";
 `;
 
   const outPath = join(ROOT, "data", "tournament.ts");
