@@ -4,6 +4,7 @@ import Fixtures from "@/components/Fixtures";
 import PointsChart from "@/components/PointsChart";
 import NextUpdate from "@/components/NextUpdate";
 import DevRefreshButton from "@/components/DevRefreshButton";
+import HeaderMatchCard from "@/components/HeaderMatchCard";
 import { draft, results, fixtures, lastUpdated } from "@/data/tournament";
 import { SCORING, SCORING_LABELS, ASSUMED } from "@/lib/scoring";
 
@@ -12,16 +13,19 @@ export default function Page() {
     <main className="wrap">
       {process.env.NODE_ENV === "development" && <DevRefreshButton />}
       <header className="masthead">
-        <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>
-        <h1 className="title">
-          World Cup
-          <br />
-          Draft Table
-        </h1>
-        <p className="subtitle">
-          Points scored by each manager&rsquo;s drafted nation, live through
-          the tournament.
-        </p>
+        <div className="masthead-title">
+          <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>
+          <h1 className="title">
+            World Cup
+            <br />
+            Draft Table
+          </h1>
+          <p className="subtitle">
+            Points scored by each manager&rsquo;s drafted nation, live through
+            the tournament.
+          </p>
+        </div>
+        <HeaderMatchCard />
       </header>
 
       <section className="section">

@@ -53,15 +53,68 @@ body {
   padding: 28px 20px 64px;
 }
 
-/* ── Header / score bug ─────────────────────────────────────────── */
+/* ── Header ─────────────────────────────────────────────────────── */
 .masthead {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   padding-bottom: 22px;
   border-bottom: 1px solid var(--line-soft);
+}
+
+.masthead-title {
+  flex: 1 1 260px;
+}
+
+/* next match / live card in the header */
+.header-card {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  min-width: 220px;
+  align-self: flex-end;
+}
+.header-card-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.header-card-label.live-label {
+  color: var(--pitch);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+.header-card-match {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  flex-wrap: wrap;
+}
+.header-card-score {
+  font-family: var(--mono);
+  font-weight: 800;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.header-card-vs {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.header-card-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 5px;
 }
 
 .eyebrow {
