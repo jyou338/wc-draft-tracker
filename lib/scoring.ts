@@ -1,27 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  SCORING WEIGHTS  — change a number, redeploy, every total recalculates.
 // ─────────────────────────────────────────────────────────────────────────────
-//  Confirmed from the organiser's table:  goal = 5,  assist = 2
-//  The rest are ASSUMPTIONS (no such events have happened yet). Confirm with
-//  your organiser and adjust — the whole site reflows automatically.
+//  All confirmed by the organiser.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const SCORING = {
-  goal: 5, // confirmed
-  assist: 2, // confirmed
-  cleanSheet: 4, // assumed
-  yellowCard: -1, // assumed
-  redCard: -3, // assumed
-  ownGoal: -2, // assumed
+  goal: 5,
+  assist: 2,
+  cleanSheet: 3,
+  yellowCard: -1,
+  redCard: -5,
+  ownGoal: -10,
 } as const;
 
 // Which weights are still guesses — used to footnote them in the UI.
-export const ASSUMED: (keyof typeof SCORING)[] = [
-  "cleanSheet",
-  "yellowCard",
-  "redCard",
-  "ownGoal",
-];
+export const ASSUMED: (keyof typeof SCORING)[] = [];
 
 export const SCORING_LABELS: Record<keyof typeof SCORING, string> = {
   goal: "Goal",
