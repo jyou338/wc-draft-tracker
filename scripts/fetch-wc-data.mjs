@@ -87,8 +87,8 @@ function isDrafted(apiTeamName) {
 function stageToMatchday(stage, matchday) {
   if (stage === "GROUP_STAGE") return matchday ?? 1;
   const map = {
-    ROUND_OF_32: 4,
-    ROUND_OF_16: 5,
+    LAST_32: 4,
+    LAST_16: 5,
     QUARTER_FINALS: 6,
     SEMI_FINALS: 7,
     THIRD_PLACE: 8,
