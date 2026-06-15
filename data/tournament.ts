@@ -92,6 +92,19 @@ export const results: Result[] = [
     redCards: [],
     ownGoals: [],
   },
+  {
+    matchday: 1,
+    team: "Spain",
+    opponent: "Cape Verde",
+    scoreFor: 0,
+    scoreAgainst: 0,
+    goals: [],
+    assists: 0,
+    cleanSheet: true,
+    yellowCards: ["Pedri"],
+    redCards: [],
+    ownGoals: [],
+  },
 ];
 
 export interface Fixture {
@@ -104,15 +117,14 @@ export interface Fixture {
 
 export const fixtures: Fixture[] = [
   { matchday: 1, team: "Argentina", opponent: "Algeria", kickoff: "Wed 01:00 UTC", kickoffISO: "2026-06-17T01:00Z" },
-  { matchday: 1, team: "Belgium", opponent: "Egypt", kickoff: "Mon 19:00 UTC", kickoffISO: "2026-06-15T19:00Z" },
+  { matchday: 1, team: "Belgium", opponent: "Iran", kickoff: "Sun 19:00 UTC", kickoffISO: "2026-06-21T19:00Z" },
   { matchday: 1, team: "Colombia", opponent: "Uzbekistan", kickoff: "Thu 02:00 UTC", kickoffISO: "2026-06-18T02:00Z" },
   { matchday: 1, team: "England", opponent: "Croatia", kickoff: "Wed 20:00 UTC", kickoffISO: "2026-06-17T20:00Z" },
   { matchday: 1, team: "France", opponent: "Senegal", kickoff: "Tue 19:00 UTC", kickoffISO: "2026-06-16T19:00Z" },
   { matchday: 1, team: "Norway", opponent: "Iraq", kickoff: "Tue 22:00 UTC", kickoffISO: "2026-06-16T22:00Z" },
   { matchday: 1, team: "Portugal", opponent: "Congo DR", kickoff: "Wed 17:00 UTC", kickoffISO: "2026-06-17T17:00Z" },
-  { matchday: 1, team: "Spain", opponent: "Saudi Arabia", kickoff: "Sun 16:00 UTC", kickoffISO: "2026-06-21T16:00Z" },
   { matchday: 2, team: "Argentina", opponent: "Austria", kickoff: "Mon 17:00 UTC", kickoffISO: "2026-06-22T17:00Z" },
-  { matchday: 2, team: "Belgium", opponent: "Iran", kickoff: "Sun 19:00 UTC", kickoffISO: "2026-06-21T19:00Z" },
+  { matchday: 2, team: "Belgium", opponent: "New Zealand", kickoff: "Sat 03:00 UTC", kickoffISO: "2026-06-27T03:00Z" },
   { matchday: 2, team: "Brazil", opponent: "Haiti", kickoff: "Sat 00:30 UTC", kickoffISO: "2026-06-20T00:30Z" },
   { matchday: 2, team: "Colombia", opponent: "Congo DR", kickoff: "Wed 02:00 UTC", kickoffISO: "2026-06-24T02:00Z" },
   { matchday: 2, team: "England", opponent: "Ghana", kickoff: "Tue 20:00 UTC", kickoffISO: "2026-06-23T20:00Z" },
@@ -122,9 +134,8 @@ export const fixtures: Fixture[] = [
   { matchday: 2, team: "Netherlands", opponent: "Sweden", kickoff: "Sat 17:00 UTC", kickoffISO: "2026-06-20T17:00Z" },
   { matchday: 2, team: "Norway", opponent: "Senegal", kickoff: "Tue 00:00 UTC", kickoffISO: "2026-06-23T00:00Z" },
   { matchday: 2, team: "Portugal", opponent: "Uzbekistan", kickoff: "Tue 17:00 UTC", kickoffISO: "2026-06-23T17:00Z" },
-  { matchday: 2, team: "Spain", opponent: "Uruguay", kickoff: "Sat 00:00 UTC", kickoffISO: "2026-06-27T00:00Z" },
+  { matchday: 2, team: "Spain", opponent: "Saudi Arabia", kickoff: "Sun 16:00 UTC", kickoffISO: "2026-06-21T16:00Z" },
   { matchday: 3, team: "Argentina", opponent: "Jordan", kickoff: "Sun 02:00 UTC", kickoffISO: "2026-06-28T02:00Z" },
-  { matchday: 3, team: "Belgium", opponent: "New Zealand", kickoff: "Sat 03:00 UTC", kickoffISO: "2026-06-27T03:00Z" },
   { matchday: 3, team: "Brazil", opponent: "Scotland", kickoff: "Wed 22:00 UTC", kickoffISO: "2026-06-24T22:00Z" },
   { matchday: 3, team: "Colombia", opponent: "Portugal", kickoff: "Sat 23:30 UTC", kickoffISO: "2026-06-27T23:30Z" },
   { matchday: 3, team: "England", opponent: "Panama", kickoff: "Sat 21:00 UTC", kickoffISO: "2026-06-27T21:00Z" },
@@ -134,9 +145,10 @@ export const fixtures: Fixture[] = [
   { matchday: 3, team: "Netherlands", opponent: "Tunisia", kickoff: "Thu 23:00 UTC", kickoffISO: "2026-06-25T23:00Z" },
   { matchday: 3, team: "Norway", opponent: "France", kickoff: "Fri 19:00 UTC", kickoffISO: "2026-06-26T19:00Z" },
   { matchday: 3, team: "Portugal", opponent: "Colombia", kickoff: "Sat 23:30 UTC", kickoffISO: "2026-06-27T23:30Z" },
+  { matchday: 3, team: "Spain", opponent: "Uruguay", kickoff: "Sat 00:00 UTC", kickoffISO: "2026-06-27T00:00Z" },
 ];
 
-export const lastUpdated = "2026-06-15 16:51 UTC";
+export const lastUpdated = "2026-06-15 20:19 UTC";
 
 export interface LiveMatch {
   team: string;
@@ -147,5 +159,5 @@ export interface LiveMatch {
 }
 
 export const liveMatches: LiveMatch[] = [
-  { team: "Spain", opponent: "Cape Verde", scoreFor: 0, scoreAgainst: 0, minute: "45'+4'" },
+  { team: "Belgium", opponent: "Egypt", scoreFor: 0, scoreAgainst: 1, minute: "57'" },
 ];
