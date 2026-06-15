@@ -137,7 +137,7 @@ export const fixtures: Fixture[] = [
   { matchday: 3, team: "Spain", opponent: "Uruguay", kickoff: "Sat 00:00 UTC", kickoffISO: "2026-06-27T00:00Z" },
 ];
 
-export const lastUpdated = "2026-06-15 01:43 UTC";
+export const lastUpdated = "2026-06-15 04:10 UTC";
 
 export interface LiveMatch {
   team: string;
