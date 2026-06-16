@@ -6,12 +6,19 @@ const flagOf = (team: string) =>
 const ownerOf = (team: string) =>
   draft.find((d) => d.team === team)?.owner ?? "";
 
-// Group fixtures by matchday
+// Group fixtures by matchday, sorted by kickoff time within each group
 function groupByMatchday(items: typeof fixtures) {
   const map: Record<number, typeof fixtures> = {};
   for (const f of items) {
     if (!map[f.matchday]) map[f.matchday] = [];
     map[f.matchday].push(f);
+  }
+  for (const group of Object.values(map)) {
+    group.sort((a, b) => {
+      if (a.kickoffISO && b.kickoffISO)
+        return new Date(a.kickoffISO).getTime() - new Date(b.kickoffISO).getTime();
+      return (a.kickoff ?? "").localeCompare(b.kickoff ?? "");
+    });
   }
   return map;
 }

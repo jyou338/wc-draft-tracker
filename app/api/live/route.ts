@@ -54,12 +54,21 @@ export async function GET() {
         const ownGoals: string[] = [];
 
         for (const detail of details) {
-          if (detail.team?.id !== c.id) continue;
           const player = detail.athletesInvolved?.[0]?.displayName ?? "Unknown";
-          if (detail.ownGoal) ownGoals.push(player);
-          else if (detail.scoringPlay) goals.push(player);
-          else if (detail.redCard) redCards.push(player);
-          else if (detail.yellowCard) yellowCards.push(player);
+          if (detail.ownGoal) {
+            // ESPN credits the own goal to the benefiting team.
+            if (detail.team?.id === opp?.id) {
+              // Our player scored against us → -10
+              ownGoals.push(player);
+            } else if (detail.team?.id === c.id) {
+              // Opponent own goal into their net — counts as a goal for us → +5
+              goals.push(`OG (${player})`);
+            }
+          } else if (detail.team?.id === c.id) {
+            if (detail.scoringPlay) goals.push(player);
+            else if (detail.redCard) redCards.push(player);
+            else if (detail.yellowCard) yellowCards.push(player);
+          }
         }
 
         const assistStat = c.statistics?.find((s) => s.name === "goalAssists");

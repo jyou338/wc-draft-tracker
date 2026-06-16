@@ -111,12 +111,12 @@ export const results: Result[] = [
     opponent: "Egypt",
     scoreFor: 1,
     scoreAgainst: 1,
-    goals: [],
+    goals: ["OG (Mohamed Hany)"],
     assists: 0,
     cleanSheet: false,
     yellowCards: ["Timothy Castagne","Maxim De Cuyper"],
     redCards: [],
-    ownGoals: ["Mohamed Hany"],
+    ownGoals: [],
   },
   {
     matchday: 1,
@@ -172,7 +172,7 @@ export const fixtures: Fixture[] = [
   { matchday: 3, team: "Spain", opponent: "Uruguay", kickoff: "Sat 00:00 UTC", kickoffISO: "2026-06-27T00:00Z" },
 ];
 
-export const lastUpdated = "2026-06-16 22:04 UTC";
+export const lastUpdated = "2026-06-16 22:26 UTC";
 
 export interface LiveMatch {
   team: string;
@@ -183,5 +183,5 @@ export interface LiveMatch {
 }
 
 export const liveMatches: LiveMatch[] = [
-  { team: "Norway", opponent: "Iraq", scoreFor: 0, scoreAgainst: 0, minute: "4'" },
+  { team: "Norway", opponent: "Iraq", scoreFor: 0, scoreAgainst: 0, minute: "25'" },
 ];

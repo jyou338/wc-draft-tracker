@@ -123,6 +123,7 @@ async function main() {
       const ourName = normalise(comp.team.displayName);
       const opponentComp = competitors.find(c => c !== comp);
       const opponentName = opponentComp ? normalise(opponentComp.team.displayName) : "Unknown";
+      const opponentId = opponentComp?.id;
 
       if (isCompleted) {
         let matchday;
@@ -143,18 +144,21 @@ async function main() {
         const ownGoals = [];
 
         for (const detail of details) {
-          const isOurTeam = detail.team?.id === ourTeamId;
-          if (!isOurTeam) continue;
           const player = detail.athletesInvolved?.[0]?.displayName ?? "Unknown";
 
           if (detail.ownGoal) {
-            ownGoals.push(player);
-          } else if (detail.scoringPlay) {
-            goals.push(player);
-          } else if (detail.redCard) {
-            redCards.push(player);
-          } else if (detail.yellowCard) {
-            yellowCards.push(player);
+            // ESPN credits the own goal to the team that BENEFITED.
+            if (detail.team?.id === opponentId) {
+              // Our player scored against us → -10
+              ownGoals.push(player);
+            } else if (detail.team?.id === ourTeamId) {
+              // Opponent scored own goal into their net — counts as a goal for us → +5
+              goals.push(`OG (${player})`);
+            }
+          } else if (detail.team?.id === ourTeamId) {
+            if (detail.scoringPlay) goals.push(player);
+            else if (detail.redCard) redCards.push(player);
+            else if (detail.yellowCard) yellowCards.push(player);
           }
         }
 
