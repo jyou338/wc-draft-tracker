@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Scoreboard from "@/components/Scoreboard";
 import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
@@ -7,7 +9,7 @@ import HeaderMatchCard from "@/components/HeaderMatchCard";
 import LiveProvider from "@/components/LiveProvider";
 import { draft } from "@/data/tournament";
 import { getTournamentData } from "@/lib/get-tournament-data";
-import { SCORING, SCORING_LABELS, ASSUMED } from "@/lib/scoring";
+import { SCORING, SCORING_LABELS } from "@/lib/scoring";
 
 export default async function Page() {
   const { results, fixtures, liveMatches, lastUpdated } = await getTournamentData();
@@ -74,13 +76,10 @@ export default async function Page() {
                 {SCORING[k] > 0 ? "+" : ""}
                 {SCORING[k]}
               </b>
-              {ASSUMED.includes(k) && <span className="star"> *</span>}
             </span>
           ))}
         </div>
-        <p className="foot-note">
-          <span className="star">*</span> Assumed value &nbsp;<LastUpdated timestamp={lastUpdated} />
-        </p>
+        <p className="foot-note"><LastUpdated timestamp={lastUpdated} /></p>
       </footer>
     </main>
     </LiveProvider>
