@@ -1,10 +1,11 @@
+import { getTournamentData } from "@/lib/get-tournament-data";
 import { buildStandings, type Standing } from "@/lib/standings";
-import { fixtures, results } from "@/data/tournament";
 import MatchHistory from "@/components/MatchHistory";
 import LocalTime from "@/components/LocalTime";
 import KickoffCountdown from "@/components/KickoffCountdown";
 import LiveBadge from "@/components/LiveBadge";
 import LivePoints from "@/components/LivePoints";
+import type { Result } from "@/data/tournament";
 
 function stateClass(s: Standing): string {
   if (s.rank === 1 && s.points > 0) return "leader";
@@ -21,22 +22,18 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-function topScorers(team: string, n = 3): Array<[string, number]> {
+function topScorers(results: Result[], team: string, n = 3): Array<[string, number]> {
   const map: Record<string, number> = {};
   for (const r of results.filter((r) => r.team === team)) {
-    for (const g of r.goals) {
-      map[g] = (map[g] ?? 0) + 1;
-    }
+    for (const g of r.goals) map[g] = (map[g] ?? 0) + 1;
   }
-  return Object.entries(map)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, n);
+  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n);
 }
 
-export default function Scoreboard() {
-  const standings = buildStandings();
+export default async function Scoreboard() {
+  const { results, fixtures } = await getTournamentData();
+  const standings = buildStandings(results);
 
-  // Previous-matchday standings for movement arrows
   const maxMatchday = results.length > 0 ? Math.max(...results.map((r) => r.matchday)) : 0;
   const prevResults = results.filter((r) => r.matchday < maxMatchday);
   const prevStandings = prevResults.length > 0 ? buildStandings(prevResults) : null;
@@ -56,7 +53,7 @@ export default function Scoreboard() {
         const penaltyCards = s.yellowCards + s.redCards + s.ownGoals;
         const next = nextGame[s.team];
         const teamResults = results.filter((r) => r.team === s.team);
-        const scorers = topScorers(s.team);
+        const scorers = topScorers(results, s.team);
         const moved = prevRank[s.team] !== undefined ? prevRank[s.team] - s.rank : null;
 
         return (
@@ -75,9 +72,7 @@ export default function Scoreboard() {
               {moved === 0 && <div className="movement same">—</div>}
             </div>
             <div className="id">
-              <span className="flag" aria-hidden>
-                {s.flag}
-              </span>
+              <span className="flag" aria-hidden>{s.flag}</span>
               <div className="names">
                 <div className="owner">
                   {s.owner} · {s.team}
@@ -91,16 +86,12 @@ export default function Scoreboard() {
                     ) : next.kickoff ? (
                       ` · ${next.kickoff}`
                     ) : null}
-                    {next.kickoffISO && (
-                      <KickoffCountdown iso={next.kickoffISO} />
-                    )}
+                    {next.kickoffISO && <KickoffCountdown iso={next.kickoffISO} />}
                   </div>
                 )}
                 {scorers.length > 0 && (
                   <div className="top-scorers">
-                    {scorers
-                      .map(([name, count]) => `${name} (${count})`)
-                      .join(", ")}
+                    {scorers.map(([name, count]) => `${name} (${count})`).join(", ")}
                   </div>
                 )}
               </div>

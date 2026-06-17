@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { draft, results } from "@/data/tournament";
+import type { Result, DraftPick } from "@/data/tournament";
 import { resultPoints } from "@/lib/standings";
 
 const COLORS = [
@@ -10,11 +10,7 @@ const COLORS = [
   "#22d3ee", "#4ade80", "#f472b6", "#facc15",
 ];
 
-function ptSegDist(
-  px: number, py: number,
-  x1: number, y1: number,
-  x2: number, y2: number,
-): number {
+function ptSegDist(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
   const dx = x2 - x1, dy = y2 - y1;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return Math.hypot(px - x1, py - y1);
@@ -28,7 +24,7 @@ interface HoverState {
   clientY: number;
 }
 
-export default function PointsChart() {
+export default function PointsChart({ results, draft }: { results: Result[]; draft: DraftPick[] }) {
   const [hovered, setHovered] = useState<HoverState | null>(null);
   const [isTouch, setIsTouch] = useState(false);
 
@@ -36,17 +32,13 @@ export default function PointsChart() {
     setIsTouch(window.matchMedia("(hover: none)").matches);
   }, []);
 
-  const matchdays = [...new Set(results.map((r) => r.matchday))].sort(
-    (a, b) => a - b,
-  );
+  const matchdays = [...new Set(results.map((r) => r.matchday))].sort((a, b) => a - b);
   if (matchdays.length === 0) return null;
 
   const series = draft.map((pick, i) => {
     let cum = 0;
     const pts = matchdays.map((md) => {
-      for (const r of results.filter(
-        (r2) => r2.team === pick.team && r2.matchday === md,
-      )) {
+      for (const r of results.filter((r2) => r2.team === pick.team && r2.matchday === md)) {
         cum += resultPoints(r);
       }
       return cum;
@@ -62,13 +54,9 @@ export default function PointsChart() {
   const ch = H - padT - padB;
 
   const xOf = (i: number) =>
-    matchdays.length === 1
-      ? padL + cw / 2
-      : padL + (i / (matchdays.length - 1)) * cw;
-
+    matchdays.length === 1 ? padL + cw / 2 : padL + (i / (matchdays.length - 1)) * cw;
   const yOf = (p: number) => padT + ch - (p / maxPts) * ch;
 
-  // Larger targets and dots on touch devices
   const DOT_R = isTouch ? 8 : 5;
   const DOT_R_HOV = isTouch ? 11 : 7;
   const DOT_HIT = isTouch ? 28 : 14;
@@ -110,16 +98,10 @@ export default function PointsChart() {
 
   const hoveredTeams = new Set(hovered?.teams ?? []);
   const anyHovered = hoveredTeams.size > 0;
-
-  const legend = [...series].sort(
-    (a, b) => b.pts[b.pts.length - 1] - a.pts[a.pts.length - 1],
-  );
+  const legend = [...series].sort((a, b) => b.pts[b.pts.length - 1] - a.pts[a.pts.length - 1]);
   const yTicks = [0, Math.round(maxPts / 2), maxPts];
-
   const tooltipMatches = hovered
-    ? hovered.teams
-        .map((t) => series.find((s) => s.team === t)!)
-        .sort((a, b) => b.pts[b.pts.length - 1] - a.pts[a.pts.length - 1])
+    ? hovered.teams.map((t) => series.find((s) => s.team === t)!).sort((a, b) => b.pts[b.pts.length - 1] - a.pts[a.pts.length - 1])
     : [];
 
   return (
@@ -142,15 +124,11 @@ export default function PointsChart() {
         ))}
         {yTicks.map((v) => (
           <text key={v} x={padL - 6} y={yOf(v) + 4} textAnchor="end"
-            fill="var(--ink-faint)" fontSize="10" fontFamily="var(--mono)">
-            {v}
-          </text>
+            fill="var(--ink-faint)" fontSize="10" fontFamily="var(--mono)">{v}</text>
         ))}
         {matchdays.map((md, i) => (
           <text key={md} x={xOf(i)} y={H - 8} textAnchor="middle"
-            fill="var(--ink-faint)" fontSize="10" fontFamily="var(--mono)">
-            MD{md}
-          </text>
+            fill="var(--ink-faint)" fontSize="10" fontFamily="var(--mono)">MD{md}</text>
         ))}
 
         {series.map((s) => {
@@ -181,8 +159,7 @@ export default function PointsChart() {
       </svg>
 
       {hovered && tooltipMatches.length > 0 && (
-        <div className="chart-tooltip"
-          style={{ left: hovered.clientX + 16, top: hovered.clientY - 8 }}>
+        <div className="chart-tooltip" style={{ left: hovered.clientX + 16, top: hovered.clientY - 8 }}>
           {tooltipMatches.map((s) => (
             <div key={s.team} style={{ color: s.color }}>
               {s.flag} {s.owner} · {s.pts[s.pts.length - 1]} pts

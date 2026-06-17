@@ -1,37 +1,44 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  fetch-wc-data.mjs
-//  Fetches 2026 World Cup data from ESPN's public API and rewrites
-//  data/tournament.ts so Vercel can redeploy a fresh static build.
+//  Fetches 2026 World Cup data from ESPN's public API and upserts it to
+//  Supabase so the site picks it up on the next page load.
 //
-//  Run locally:   node scripts/fetch-wc-data.mjs
-//  No API key required.
+//  Run locally:
+//    node --env-file=.env.local scripts/fetch-wc-data.mjs
+//
+//  Requires env vars: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+//  No other API key required.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { writeFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, "..");
+if (!supabaseUrl || !supabaseKey) {
+  console.error("❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  console.error("    Run with: node --env-file=.env.local scripts/fetch-wc-data.mjs");
+  process.exit(1);
+}
+
+async function supabaseUpsert(payload) {
+  const res = await fetch(`${supabaseUrl}/rest/v1/tournament_cache`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      "Content-Type": "application/json",
+      Prefer: "resolution=merge-duplicates",
+    },
+    body: JSON.stringify({ id: 1, data: payload, fetched_at: new Date().toISOString() }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase ${res.status}: ${text}`);
+  }
+}
 
 const DRAFTED_TEAMS = [
   "Brazil", "Morocco", "Spain", "France", "England", "Portugal",
   "Argentina", "Germany", "Netherlands", "Belgium", "Norway", "Colombia",
-];
-
-const DRAFT = [
-  { team: "Brazil",      owner: "Sammy",   flag: "🇧🇷" },
-  { team: "Morocco",     owner: "James",   flag: "🇲🇦" },
-  { team: "Spain",       owner: "Dan",     flag: "🇪🇸" },
-  { team: "France",      owner: "Sam",     flag: "🇫🇷" },
-  { team: "England",     owner: "Brendan", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  { team: "Portugal",    owner: "Jared",   flag: "🇵🇹" },
-  { team: "Argentina",   owner: "Ben",     flag: "🇦🇷" },
-  { team: "Germany",     owner: "Aaron",   flag: "🇩🇪" },
-  { team: "Netherlands", owner: "Matt",    flag: "🇳🇱" },
-  { team: "Belgium",     owner: "Mike",    flag: "🇧🇪" },
-  { team: "Norway",      owner: "Scott",   flag: "🇳🇴" },
-  { team: "Colombia",    owner: "Nathan",  flag: "🇨🇴" },
 ];
 
 // ESPN displayName → our name if they differ
@@ -82,27 +89,30 @@ const KNOCKOUT_MATCHDAY = {
 async function main() {
   console.log("Fetching WC 2026 data from ESPN…");
 
+  const allDates = [...dateRange("2026-06-11", "2026-07-19")];
+  const BATCH = 10;
   const seenIds = new Set();
   const allEvents = [];
 
-  for (const dateStr of dateRange("2026-06-11", "2026-07-19")) {
-    const data = await fetchScoreboard(dateStr);
-    for (const event of data.events ?? []) {
-      if (!seenIds.has(event.id)) {
-        seenIds.add(event.id);
-        allEvents.push(event);
+  for (let i = 0; i < allDates.length; i += BATCH) {
+    const batch = allDates.slice(i, i + BATCH);
+    const pages = await Promise.all(batch.map(fetchScoreboard));
+    for (const data of pages) {
+      for (const event of data.events ?? []) {
+        if (!seenIds.has(event.id)) {
+          seenIds.add(event.id);
+          allEvents.push(event);
+        }
       }
     }
   }
 
-  // Sort chronologically
   allEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
   console.log(`  Unique events: ${allEvents.length}`);
 
   const results = [];
   const fixturesOut = [];
   const liveMatches = [];
-  // Track group-stage games per team to assign matchday 1/2/3
   const teamCompletedCount = {};
   const teamFixtureCount = {};
 
@@ -147,14 +157,8 @@ async function main() {
           const player = detail.athletesInvolved?.[0]?.displayName ?? "Unknown";
 
           if (detail.ownGoal) {
-            // ESPN credits the own goal to the team that BENEFITED.
-            if (detail.team?.id === opponentId) {
-              // Our player scored against us → -10
-              ownGoals.push(player);
-            } else if (detail.team?.id === ourTeamId) {
-              // Opponent scored own goal into their net — counts as a goal for us → +5
-              goals.push(`OG (${player})`);
-            }
+            if (detail.team?.id === opponentId) ownGoals.push(player);
+            else if (detail.team?.id === ourTeamId) goals.push(`OG (${player})`);
           } else if (detail.team?.id === ourTeamId) {
             if (detail.scoringPlay) goals.push(player);
             else if (detail.redCard) redCards.push(player);
@@ -166,22 +170,15 @@ async function main() {
         const assists = parseInt(assistStat?.displayValue ?? "0");
 
         results.push({
-          matchday,
-          team: ourName,
-          opponent: opponentName,
-          scoreFor,
-          scoreAgainst,
-          goals,
-          assists,
+          matchday, team: ourName, opponent: opponentName,
+          scoreFor, scoreAgainst, goals, assists,
           cleanSheet: scoreAgainst === 0,
-          yellowCards,
-          redCards,
-          ownGoals,
+          yellowCards, redCards, ownGoals,
         });
       } else if (isLive) {
+        teamCompletedCount[ourName] = (teamCompletedCount[ourName] ?? 0) + 1;
         liveMatches.push({
-          team: ourName,
-          opponent: opponentName,
+          team: ourName, opponent: opponentName,
           scoreFor: parseInt(comp.score ?? "0"),
           scoreAgainst: parseInt(opponentComp?.score ?? "0"),
           minute: competition.status?.displayClock ?? "",
@@ -198,9 +195,7 @@ async function main() {
         }
 
         fixturesOut.push({
-          matchday,
-          team: ourName,
-          opponent: opponentName,
+          matchday, team: ourName, opponent: opponentName,
           kickoff: fmtKickoff(event.date),
           kickoffISO: event.date ?? undefined,
         });
@@ -208,111 +203,19 @@ async function main() {
     }
   }
 
-  fixturesOut.sort((a, b) => a.matchday - b.matchday || a.team.localeCompare(b.team));
+  fixturesOut.sort((a, b) => {
+    if (a.matchday !== b.matchday) return a.matchday - b.matchday;
+    if (a.kickoffISO && b.kickoffISO) return new Date(a.kickoffISO) - new Date(b.kickoffISO);
+    return (a.kickoff ?? "").localeCompare(b.kickoff ?? "");
+  });
 
-  console.log(`  Results: ${results.length}, Fixtures: ${fixturesOut.length}`);
+  console.log(`  Results: ${results.length}, Fixtures: ${fixturesOut.length}, Live: ${liveMatches.length}`);
 
-  // ── Generate tournament.ts ─────────────────────────────────────────────────
-
-  const nowDate = new Date().toISOString().slice(0, 10);
   const nowDateTime = new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  const payload = { results, fixtures: fixturesOut, liveMatches, lastUpdated: nowDateTime };
 
-  const draftTs = DRAFT.map(
-    p => `  { team: ${JSON.stringify(p.team)}, owner: ${JSON.stringify(p.owner)}, flag: ${JSON.stringify(p.flag)} },`
-  ).join("\n");
-
-  function resultToTs(r) {
-    return [
-      `  {`,
-      `    matchday: ${r.matchday},`,
-      `    team: ${JSON.stringify(r.team)},`,
-      `    opponent: ${JSON.stringify(r.opponent)},`,
-      `    scoreFor: ${r.scoreFor},`,
-      `    scoreAgainst: ${r.scoreAgainst},`,
-      `    goals: ${JSON.stringify(r.goals)},`,
-      `    assists: ${r.assists},`,
-      `    cleanSheet: ${r.cleanSheet},`,
-      `    yellowCards: ${JSON.stringify(r.yellowCards)},`,
-      `    redCards: ${JSON.stringify(r.redCards)},`,
-      `    ownGoals: ${JSON.stringify(r.ownGoals)},`,
-      `  },`,
-    ].join("\n");
-  }
-
-  function fixtureToTs(f) {
-    const kickoffPart = f.kickoff ? `, kickoff: ${JSON.stringify(f.kickoff)}` : "";
-    const kickoffISOPart = f.kickoffISO ? `, kickoffISO: ${JSON.stringify(f.kickoffISO)}` : "";
-    return `  { matchday: ${f.matchday}, team: ${JSON.stringify(f.team)}, opponent: ${JSON.stringify(f.opponent)}${kickoffPart}${kickoffISOPart} },`;
-  }
-
-  function liveMatchToTs(m) {
-    return `  { team: ${JSON.stringify(m.team)}, opponent: ${JSON.stringify(m.opponent)}, scoreFor: ${m.scoreFor}, scoreAgainst: ${m.scoreAgainst}, minute: ${JSON.stringify(m.minute)} },`;
-  }
-
-  const output = `// ─────────────────────────────────────────────────────────────────────────────
-//  AUTO-GENERATED by scripts/fetch-wc-data.mjs — do not edit by hand.
-//  Last fetched: ${nowDate}
-//  Source: ESPN public API
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface DraftPick {
-  team: string;
-  owner: string;
-  flag: string;
-}
-
-export const draft: DraftPick[] = [
-${draftTs}
-];
-
-export interface Result {
-  matchday: number;
-  team: string;
-  opponent: string;
-  scoreFor: number;
-  scoreAgainst: number;
-  goals: string[];
-  assists: number;
-  cleanSheet: boolean;
-  yellowCards: string[];
-  redCards: string[];
-  ownGoals: string[];
-}
-
-export const results: Result[] = [
-${results.map(resultToTs).join("\n")}
-];
-
-export interface Fixture {
-  matchday: number;
-  team: string;
-  opponent: string;
-  kickoff?: string;
-  kickoffISO?: string;
-}
-
-export const fixtures: Fixture[] = [
-${fixturesOut.map(fixtureToTs).join("\n")}
-];
-
-export const lastUpdated = "${nowDateTime}";
-
-export interface LiveMatch {
-  team: string;
-  opponent: string;
-  scoreFor: number;
-  scoreAgainst: number;
-  minute: string;
-}
-
-export const liveMatches: LiveMatch[] = [
-${liveMatches.map(liveMatchToTs).join("\n")}
-];
-`;
-
-  const outPath = join(ROOT, "data", "tournament.ts");
-  writeFileSync(outPath, output, "utf8");
-  console.log(`✅  Written to ${outPath}`);
+  await supabaseUpsert(payload);
+  console.log(`✅  Supabase updated (${nowDateTime})`);
 }
 
 main().catch(e => {

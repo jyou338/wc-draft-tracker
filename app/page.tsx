@@ -2,19 +2,20 @@ import Scoreboard from "@/components/Scoreboard";
 import MatchLog from "@/components/MatchLog";
 import Fixtures from "@/components/Fixtures";
 import PointsChart from "@/components/PointsChart";
-import DevRefreshButton from "@/components/DevRefreshButton";
 import LastUpdated from "@/components/LastUpdated";
 import HeaderMatchCard from "@/components/HeaderMatchCard";
 import LiveProvider from "@/components/LiveProvider";
-import { draft, results, fixtures, lastUpdated, liveMatches } from "@/data/tournament";
+import { draft } from "@/data/tournament";
+import { getTournamentData } from "@/lib/get-tournament-data";
 import { SCORING, SCORING_LABELS, ASSUMED } from "@/lib/scoring";
 
-export default function Page() {
+export default async function Page() {
+  const { results, fixtures, liveMatches, lastUpdated } = await getTournamentData();
+
   return (
     <LiveProvider initialLiveMatches={liveMatches}>
     <main className="wrap">
-      {process.env.NODE_ENV === "development" && <DevRefreshButton />}
-      <header className="masthead">
+<header className="masthead">
         <div className="masthead-title">
           <p className="eyebrow">Fantasy Draft · {draft.length} Managers</p>
           <h1 className="title">
@@ -43,7 +44,7 @@ export default function Page() {
           <h2>Points Race</h2>
           <span className="count">Cumulative points per manager</span>
         </div>
-        <PointsChart />
+        <PointsChart results={results} draft={draft} />
       </section>
 
       <div className="grid2">
@@ -52,7 +53,7 @@ export default function Page() {
             <h2>Results</h2>
             <span className="count">{results.length} logged</span>
           </div>
-          <MatchLog />
+          <MatchLog results={results} draft={draft} />
         </section>
 
         <section>

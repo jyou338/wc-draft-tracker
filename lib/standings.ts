@@ -1,4 +1,4 @@
-import { draft, results, type Result } from "@/data/tournament";
+import { draft, type Result } from "@/data/tournament";
 import { SCORING } from "@/lib/scoring";
 
 export interface Standing {
@@ -27,19 +27,13 @@ export function resultPoints(r: Result): number {
   );
 }
 
-export function buildStandings(customResults?: Result[]): Standing[] {
-  const data = customResults ?? results;
+export function buildStandings(results: Result[]): Standing[] {
   const rows: Standing[] = draft.map((pick) => {
-    const teamResults = data.filter((r) => r.team === pick.team);
+    const teamResults = results.filter((r) => r.team === pick.team);
     const tally = {
       played: teamResults.length,
-      goals: 0,
-      assists: 0,
-      cleanSheets: 0,
-      yellowCards: 0,
-      redCards: 0,
-      ownGoals: 0,
-      points: 0,
+      goals: 0, assists: 0, cleanSheets: 0,
+      yellowCards: 0, redCards: 0, ownGoals: 0, points: 0,
     };
     for (const r of teamResults) {
       tally.goals += r.goals.length;
@@ -53,20 +47,14 @@ export function buildStandings(customResults?: Result[]): Standing[] {
     return { rank: 0, team: pick.team, owner: pick.owner, flag: pick.flag, ...tally };
   });
 
-  // Sort by points, then goals, then alphabetically by owner for stable ties.
   rows.sort(
-    (a, b) =>
-      b.points - a.points || b.goals - a.goals || a.owner.localeCompare(b.owner),
+    (a, b) => b.points - a.points || b.goals - a.goals || a.owner.localeCompare(b.owner),
   );
 
-  // Standard competition ranking (1, 2, 2, 4 …) on points only.
   let lastPoints: number | null = null;
   let lastRank = 0;
   rows.forEach((row, i) => {
-    if (row.points !== lastPoints) {
-      lastRank = i + 1;
-      lastPoints = row.points;
-    }
+    if (row.points !== lastPoints) { lastRank = i + 1; lastPoints = row.points; }
     row.rank = lastRank;
   });
 

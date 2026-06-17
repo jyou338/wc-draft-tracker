@@ -1,14 +1,13 @@
-import { draft, fixtures } from "@/data/tournament";
+import { getTournamentData } from "@/lib/get-tournament-data";
+import { draft } from "@/data/tournament";
 import LocalTime from "@/components/LocalTime";
+import type { Fixture } from "@/data/tournament";
 
-const flagOf = (team: string) =>
-  draft.find((d) => d.team === team)?.flag ?? "";
-const ownerOf = (team: string) =>
-  draft.find((d) => d.team === team)?.owner ?? "";
+const flagOf = (team: string) => draft.find((d) => d.team === team)?.flag ?? "";
+const ownerOf = (team: string) => draft.find((d) => d.team === team)?.owner ?? "";
 
-// Group fixtures by matchday, sorted by kickoff time within each group
-function groupByMatchday(items: typeof fixtures) {
-  const map: Record<number, typeof fixtures> = {};
+function groupByMatchday(items: Fixture[]) {
+  const map: Record<number, Fixture[]> = {};
   for (const f of items) {
     if (!map[f.matchday]) map[f.matchday] = [];
     map[f.matchday].push(f);
@@ -23,15 +22,15 @@ function groupByMatchday(items: typeof fixtures) {
   return map;
 }
 
-export default function Fixtures() {
+export default async function Fixtures() {
+  const { fixtures } = await getTournamentData();
+
   if (fixtures.length === 0) {
     return <div className="card">No upcoming drafted matches scheduled.</div>;
   }
 
   const grouped = groupByMatchday(fixtures);
-  const matchdays = Object.keys(grouped)
-    .map(Number)
-    .sort((a, b) => a - b);
+  const matchdays = Object.keys(grouped).map(Number).sort((a, b) => a - b);
 
   return (
     <>
@@ -40,9 +39,7 @@ export default function Fixtures() {
           <div className="fixture-group-label">Matchday {md}</div>
           {grouped[md].map((f, i) => (
             <div className="fixture" key={`${f.team}-${i}`}>
-              <span className="flag" aria-hidden>
-                {flagOf(f.team)}
-              </span>
+              <span className="flag" aria-hidden>{flagOf(f.team)}</span>
               <div className="fixture-info">
                 <span className="ft">
                   {f.team} <span className="vs">vs</span> {f.opponent}

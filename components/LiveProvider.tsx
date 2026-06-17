@@ -1,21 +1,9 @@
 "use client";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import type { LiveMatch } from "@/data/tournament";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import type { LiveMatch, LiveMatchDetail } from "@/data/tournament";
 import { SCORING } from "@/lib/scoring";
 
-export interface LiveMatchDetail extends LiveMatch {
-  goals: string[];
-  assists: number;
-  yellowCards: string[];
-  redCards: string[];
-  ownGoals: string[];
-}
+export type { LiveMatchDetail };
 
 type LiveCtx = {
   liveMatches: LiveMatchDetail[];
@@ -28,19 +16,15 @@ export function useLive() {
   return useContext(LiveContext);
 }
 
-function computeLivePoints(matches: LiveMatchDetail[]): Record<string, number> {
-  const pts: Record<string, number> = {};
-  for (const m of matches) {
-    const p =
-      m.goals.length * SCORING.goal +
-      m.assists * SCORING.assist +
-      (m.scoreAgainst === 0 ? SCORING.cleanSheet : 0) +
-      m.yellowCards.length * SCORING.yellowCard +
-      m.redCards.length * SCORING.redCard +
-      m.ownGoals.length * SCORING.ownGoal;
-    pts[m.team] = p;
-  }
-  return pts;
+function matchPoints(m: LiveMatchDetail): number {
+  return (
+    m.goals.length * SCORING.goal +
+    m.assists * SCORING.assist +
+    (m.scoreAgainst === 0 ? SCORING.cleanSheet : 0) +
+    m.yellowCards.length * SCORING.yellowCard +
+    m.redCards.length * SCORING.redCard +
+    m.ownGoals.length * SCORING.ownGoal
+  );
 }
 
 function toDetail(m: LiveMatch): LiveMatchDetail {
@@ -78,7 +62,10 @@ export default function LiveProvider({
     return () => clearInterval(id);
   }, [poll]);
 
-  const livePoints = computeLivePoints(liveMatches);
+  const livePoints: Record<string, number> = {};
+  for (const m of liveMatches) {
+    livePoints[m.team] = (livePoints[m.team] ?? 0) + matchPoints(m);
+  }
 
   return (
     <LiveContext.Provider value={{ liveMatches, livePoints }}>
