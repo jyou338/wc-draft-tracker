@@ -10,6 +10,7 @@ export interface DraftPick {
 
 export interface Result {
   matchday: number;
+  date?: string;
   team: string;
   opponent: string;
   scoreFor: number;

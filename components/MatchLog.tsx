@@ -11,39 +11,22 @@ export default function MatchLog({ results, draft }: { results: Result[]; draft:
   const flagOf = (team: string) => draft.find((d) => d.team === team)?.flag ?? "";
   const ownerOf = (team: string) => draft.find((d) => d.team === team)?.owner ?? "";
 
-  const matchdays = [...new Set(results.map((r) => r.matchday))].sort((a, b) => a - b);
-  const [tab, setTab] = useState<number | "all">(matchdays[matchdays.length - 1] ?? "all");
+  const [showAll, setShowAll] = useState(false);
 
   if (results.length === 0) {
     return <div className="card">No matches logged yet. They start soon.</div>;
   }
 
-  const filtered =
-    tab === "all"
-      ? [...results].sort((a, b) => b.matchday - a.matchday)
-      : [...results.filter((r) => r.matchday === tab)];
+  // Most recent game first, using actual event date
+  const sorted = [...results].sort((a, b) => {
+    if (a.date && b.date) return new Date(b.date).getTime() - new Date(a.date).getTime();
+    return b.matchday - a.matchday;
+  });
+  const visible = showAll ? sorted : sorted.slice(0, 3);
 
   return (
     <>
-      <div className="tab-bar">
-        <button
-          className={`tab-btn${tab === "all" ? " active" : ""}`}
-          onClick={() => setTab("all")}
-        >
-          All
-        </button>
-        {matchdays.map((md) => (
-          <button
-            key={md}
-            className={`tab-btn${tab === md ? " active" : ""}`}
-            onClick={() => setTab(md)}
-          >
-            MD{md}
-          </button>
-        ))}
-      </div>
-
-      {filtered.map((r, i) => {
+      {visible.map((r, i) => {
         const total = resultPoints(r);
         return (
           <div className="card" key={`${r.team}-${r.matchday}-${i}`}>
@@ -82,6 +65,12 @@ export default function MatchLog({ results, draft }: { results: Result[]; draft:
           </div>
         );
       })}
+
+      {!showAll && sorted.length > 3 && (
+        <button className="show-more-btn" onClick={() => setShowAll(true)}>
+          Show {sorted.length - 3} earlier result{sorted.length - 3 !== 1 ? "s" : ""}
+        </button>
+      )}
     </>
   );
 }

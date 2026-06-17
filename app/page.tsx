@@ -79,10 +79,7 @@ export default async function Page() {
           ))}
         </div>
         <p className="foot-note">
-          <span className="star">*</span> Assumed value &mdash; only goals (+5)
-          and assists (+2) were confirmed by the organiser. Adjust these in{" "}
-          <code>lib/scoring.ts</code> once your league confirms them and every
-          total recalculates. &nbsp;<LastUpdated timestamp={lastUpdated} />
+          <span className="star">*</span> Assumed value &nbsp;<LastUpdated timestamp={lastUpdated} />
         </p>
       </footer>
     </main>

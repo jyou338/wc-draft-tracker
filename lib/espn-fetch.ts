@@ -147,7 +147,7 @@ export async function fetchFromESPN(): Promise<TournamentData> {
         ) as Record<string, unknown> | undefined;
 
         results.push({
-          matchday, team: ourName, opponent: opponentName,
+          matchday, date: event.date as string, team: ourName, opponent: opponentName,
           scoreFor, scoreAgainst, goals,
           assists: parseInt((assistStat?.displayValue as string) ?? "0"),
           cleanSheet: scoreAgainst === 0,
