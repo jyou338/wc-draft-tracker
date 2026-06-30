@@ -1,4 +1,4 @@
-import type { Result, Fixture, LiveMatchDetail } from "@/data/tournament";
+import type { Result, Fixture, LiveMatchDetail, ShootoutKick } from "@/data/tournament";
 
 export interface TournamentData {
   results: Result[];
@@ -45,6 +45,27 @@ async function fetchScoreboard(dateStr: string): Promise<{ events: unknown[] }> 
   const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
   if (!res.ok) return { events: [] };
   return res.json();
+}
+
+// Per-team shootout kicks come only from the summary endpoint — the scoreboard
+// feed exposes the tally (shootoutScore) but not the individual misses.
+// Returns a map of ESPN team displayName → ordered kicks (scored + missed).
+async function fetchShootoutKicks(eventId: string): Promise<Record<string, ShootoutKick[]>> {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  if (!res.ok) return {};
+  const data = (await res.json()) as Record<string, unknown>;
+  const byTeam: Record<string, ShootoutKick[]> = {};
+  for (const rawEntry of (data.shootout as unknown[]) ?? []) {
+    const entry = rawEntry as Record<string, unknown>;
+    const team = entry.team as string;
+    if (!team) continue;
+    byTeam[team] = ((entry.shots as unknown[]) ?? []).map((rawShot) => {
+      const shot = rawShot as Record<string, unknown>;
+      return { player: (shot.player as string) ?? "Unknown", scored: shot.didScore === true };
+    });
+  }
+  return byTeam;
 }
 
 export async function fetchFromESPN(): Promise<TournamentData> {
@@ -99,6 +120,18 @@ export async function fetchFromESPN(): Promise<TournamentData> {
     });
     if (draftedComps.length === 0) continue;
 
+    // A completed match with a shootoutScore was decided on penalties — pull the
+    // per-kick breakdown once for the whole event (rare, so the extra call is cheap).
+    const wentToShootout =
+      isCompleted &&
+      competitors.some((c) => {
+        const s = (c as Record<string, unknown>).shootoutScore;
+        return s !== undefined && s !== null && s !== "";
+      });
+    const shootoutKicks = wentToShootout
+      ? await fetchShootoutKicks(event.id as string)
+      : {};
+
     for (const rawComp of draftedComps) {
       const comp = rawComp as Record<string, unknown>;
       const ourName = normalise((comp.team as Record<string, unknown>).displayName as string);
@@ -132,6 +165,10 @@ export async function fetchFromESPN(): Promise<TournamentData> {
             ((athletes?.[0] as Record<string, unknown>)?.displayName as string) ?? "Unknown";
           const detailTeamId = (detail.team as Record<string, unknown> | undefined)?.id as string | undefined;
 
+          // Shootout kicks also carry scoringPlay=true; they're scored separately
+          // (see shootout field below), so exclude them from open-play goals.
+          if (detail.shootout) continue;
+
           if (detail.ownGoal) {
             if (detailTeamId === opponentId) ownGoals.push(playerName);
             else if (detailTeamId === ourTeamId) goals.push(`OG (${playerName})`);
@@ -146,12 +183,23 @@ export async function fetchFromESPN(): Promise<TournamentData> {
           (s) => (s as Record<string, unknown>).name === "goalAssists",
         ) as Record<string, unknown> | undefined;
 
+        const ourKicks = shootoutKicks[(comp.team as Record<string, unknown>).displayName as string];
+        const shootout = ourKicks
+          ? {
+              scoreFor: parseInt((comp.shootoutScore as string) ?? "0"),
+              scoreAgainst: parseInt((opponentComp?.shootoutScore as string) ?? "0"),
+              won: comp.winner === true,
+              kicks: ourKicks,
+            }
+          : undefined;
+
         results.push({
           matchday, date: event.date as string, team: ourName, opponent: opponentName,
           scoreFor, scoreAgainst, goals,
           assists: parseInt((assistStat?.displayValue as string) ?? "0"),
           cleanSheet: scoreAgainst === 0,
           yellowCards, redCards, ownGoals,
+          ...(shootout ? { shootout } : {}),
         });
       } else if (isLive) {
         teamCompletedCount[ourName] = (teamCompletedCount[ourName] ?? 0) + 1;
@@ -164,6 +212,7 @@ export async function fetchFromESPN(): Promise<TournamentData> {
           const athletes = detail.athletesInvolved as unknown[] | undefined;
           const playerName = ((athletes?.[0] as Record<string, unknown>)?.displayName as string) ?? "Unknown";
           const detailTeamId = (detail.team as Record<string, unknown> | undefined)?.id as string | undefined;
+          if (detail.shootout) continue;
           if (detail.ownGoal) {
             if (detailTeamId === opponentId) liveOwnGoals.push(playerName);
             else if (detailTeamId === ourTeamId) liveGoals.push(`OG (${playerName})`);

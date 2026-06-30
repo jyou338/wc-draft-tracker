@@ -8,6 +8,18 @@ export interface DraftPick {
   flag: string;
 }
 
+export interface ShootoutKick {
+  player: string;
+  scored: boolean; // false = missed or saved (ESPN doesn't distinguish the two)
+}
+
+export interface Shootout {
+  scoreFor: number;     // our team's converted kicks
+  scoreAgainst: number; // opponent's converted kicks
+  won: boolean;         // did our team advance
+  kicks: ShootoutKick[]; // our team's kicks only, in shooting order
+}
+
 export interface Result {
   matchday: number;
   date?: string;
@@ -21,6 +33,7 @@ export interface Result {
   yellowCards: string[];
   redCards: string[];
   ownGoals: string[];
+  shootout?: Shootout; // present only for knockout matches decided on penalties
 }
 
 export interface Fixture {

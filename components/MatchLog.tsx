@@ -37,7 +37,12 @@ export default function MatchLog({ results, draft }: { results: Result[]; draft:
                 <span className="vs"> </span>
                 {r.opponent}
               </div>
-              <div className="result-score">{r.scoreFor}–{r.scoreAgainst}</div>
+              <div className="result-score">
+                {r.scoreFor}–{r.scoreAgainst}
+                {r.shootout && (
+                  <span className="pens-note"> ({r.shootout.scoreFor}–{r.shootout.scoreAgainst} pens)</span>
+                )}
+              </div>
             </div>
             <div className="result-meta">
               {r.goals.map((g, k) => (
@@ -59,6 +64,16 @@ export default function MatchLog({ results, draft }: { results: Result[]; draft:
               ))}
               {r.ownGoals.map((o, k) => (
                 <span className="tag" key={`o${k}`}>❌ OG {o} {pts(SCORING.ownGoal)}</span>
+              ))}
+              {r.shootout && (
+                <span className="tag shootout-head">
+                  🥅 Shootout {r.shootout.won ? "won" : "lost"} {r.shootout.scoreFor}–{r.shootout.scoreAgainst}
+                </span>
+              )}
+              {r.shootout?.kicks.map((k, j) => (
+                <span className={`tag shootout ${k.scored ? "goal" : "bad"}`} key={`so${j}`}>
+                  {k.scored ? "⚽" : "❌"} {k.player} {pts(k.scored ? SCORING.shootoutGoal : SCORING.shootoutMiss)}
+                </span>
               ))}
               <span className="tag earned">{ownerOf(r.team)} {pts(total)}</span>
             </div>

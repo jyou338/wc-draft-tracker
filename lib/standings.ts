@@ -16,6 +16,15 @@ export interface Standing {
   points: number;
 }
 
+export function shootoutPoints(r: Result): number {
+  if (!r.shootout) return 0;
+  let pts = 0;
+  for (const k of r.shootout.kicks) {
+    pts += k.scored ? SCORING.shootoutGoal : SCORING.shootoutMiss;
+  }
+  return pts;
+}
+
 export function resultPoints(r: Result): number {
   return (
     r.goals.length * SCORING.goal +
@@ -23,7 +32,8 @@ export function resultPoints(r: Result): number {
     (r.cleanSheet ? SCORING.cleanSheet : 0) +
     r.yellowCards.length * SCORING.yellowCard +
     r.redCards.length * SCORING.redCard +
-    r.ownGoals.length * SCORING.ownGoal
+    r.ownGoals.length * SCORING.ownGoal +
+    shootoutPoints(r)
   );
 }
 

@@ -81,8 +81,19 @@ interface LiveMatch {
 - `competition.status.displayClock` — current match minute for live matches
 - **Assists are not available per-player** from any ESPN endpoint — team count only
 
+## Penalty shootouts (knockouts only)
+- Scoreboard feed gives the tally (`competitor.shootoutScore`) + `winner`, and lists only
+  *scored* shootout kicks in `details[]` (flagged `shootout: true`) — **misses are absent there**.
+- The **summary** endpoint (`…/summary?event=<id>`) has the full per-kick breakdown incl. misses:
+  `shootout[].shots[] = { player, shotNumber, didScore }`. ESPN can't tell a miss from a save
+  (`didScore: false` covers both). Fetched only for a completed match that has a `shootoutScore`.
+- Stored on `Result.shootout` = `{ scoreFor, scoreAgainst, won, kicks[] }`; scored separately and
+  shown as a dashed "🥅 Shootout" pill + per-kick tags in MatchLog / MatchHistory.
+- ⚠️ Scored shootout kicks also carry `scoringPlay: true`; the fetch loops `continue` on
+  `detail.shootout` so they don't double-count as open-play goals.
+
 ## Scoring (`lib/scoring.ts`)
-- **Confirmed by the organiser:** goal **+5**, assist **+2**
+- **Confirmed by the organiser:** goal **+5**, assist **+2**, shootout goal **+5**, shootout miss **−5**
 - **Assumed (not yet confirmed):** clean sheet +3, yellow −1, red −5, own goal −10.
   These are flagged with `*` in the footer. Change a number, redeploy, totals recompute.
 

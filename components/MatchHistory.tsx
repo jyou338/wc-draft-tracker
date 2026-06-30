@@ -40,6 +40,9 @@ export default function MatchHistory({ results, owner }: Props) {
                 <div className="history-match">
                   <span className="history-score">
                     {r.scoreFor}–{r.scoreAgainst}
+                    {r.shootout && (
+                      <span className="pens-note"> ({r.shootout.scoreFor}–{r.shootout.scoreAgainst}p)</span>
+                    )}
                   </span>
                   <span className="history-opponent">vs {r.opponent}</span>
                   <span className={`history-pts ${total >= 0 ? "pos" : "neg"}`}>
@@ -64,6 +67,16 @@ export default function MatchHistory({ results, owner }: Props) {
                   ))}
                   {r.ownGoals.map((o, k) => (
                     <span className="tag bad" key={`o${k}`}>❌ Own goal · {o} {pts(SCORING.ownGoal)}</span>
+                  ))}
+                  {r.shootout && (
+                    <span className="tag shootout-head">
+                      🥅 Shootout {r.shootout.won ? "won" : "lost"} {r.shootout.scoreFor}–{r.shootout.scoreAgainst}
+                    </span>
+                  )}
+                  {r.shootout?.kicks.map((k, j) => (
+                    <span className={`tag shootout ${k.scored ? "goal" : "bad"}`} key={`so${j}`}>
+                      {k.scored ? "⚽" : "❌"} {k.player} {pts(k.scored ? SCORING.shootoutGoal : SCORING.shootoutMiss)}
+                    </span>
                   ))}
                 </div>
               </div>

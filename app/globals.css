@@ -486,6 +486,23 @@ body {
   color: var(--card-red);
   border-color: rgba(255, 90, 95, 0.3);
 }
+/* Penalty shootout — a pill header plus dashed-bordered per-kick tags so it's
+   visually clear these points came from the shootout, not open play. */
+.tag.shootout-head {
+  color: var(--ink);
+  background: var(--surface-2);
+  border-color: var(--line-soft);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.tag.shootout {
+  border-style: dashed;
+}
+.pens-note {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
 
 /* ── Match history rollout ──────────────────────────────────────── */
 .history-toggle {

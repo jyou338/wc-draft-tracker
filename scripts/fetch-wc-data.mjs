@@ -77,6 +77,25 @@ async function fetchScoreboard(dateStr) {
   return res.json();
 }
 
+// Per-team shootout kicks come only from the summary endpoint — the scoreboard
+// feed exposes the tally (shootoutScore) but not the individual misses.
+// Returns a map of ESPN team displayName → ordered kicks [{ player, scored }].
+async function fetchShootoutKicks(eventId) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return {};
+  const data = await res.json();
+  const byTeam = {};
+  for (const entry of data.shootout ?? []) {
+    if (!entry.team) continue;
+    byTeam[entry.team] = (entry.shots ?? []).map(shot => ({
+      player: shot.player ?? "Unknown",
+      scored: shot.didScore === true,
+    }));
+  }
+  return byTeam;
+}
+
 const KNOCKOUT_MATCHDAY = {
   "round-of-32": 4,
   "round-of-16": 5,
@@ -129,6 +148,13 @@ async function main() {
     const draftedComps = competitors.filter(c => isDrafted(c.team.displayName));
     if (draftedComps.length === 0) continue;
 
+    // A completed match with a shootoutScore was decided on penalties — pull the
+    // per-kick breakdown once for the whole event (rare, so the extra call is cheap).
+    const wentToShootout =
+      isCompleted &&
+      competitors.some(c => c.shootoutScore !== undefined && c.shootoutScore !== null && c.shootoutScore !== "");
+    const shootoutKicks = wentToShootout ? await fetchShootoutKicks(event.id) : {};
+
     for (const comp of draftedComps) {
       const ourName = normalise(comp.team.displayName);
       const opponentComp = competitors.find(c => c !== comp);
@@ -156,6 +182,10 @@ async function main() {
         for (const detail of details) {
           const player = detail.athletesInvolved?.[0]?.displayName ?? "Unknown";
 
+          // Shootout kicks also carry scoringPlay=true; they're scored separately
+          // (see shootout field below), so exclude them from open-play goals.
+          if (detail.shootout) continue;
+
           if (detail.ownGoal) {
             if (detail.team?.id === opponentId) ownGoals.push(player);
             else if (detail.team?.id === ourTeamId) goals.push(`OG (${player})`);
@@ -169,11 +199,22 @@ async function main() {
         const assistStat = comp.statistics?.find(s => s.name === "goalAssists");
         const assists = parseInt(assistStat?.displayValue ?? "0");
 
+        const ourKicks = shootoutKicks[comp.team.displayName];
+        const shootout = ourKicks
+          ? {
+              scoreFor: parseInt(comp.shootoutScore ?? "0"),
+              scoreAgainst: parseInt(opponentComp?.shootoutScore ?? "0"),
+              won: comp.winner === true,
+              kicks: ourKicks,
+            }
+          : undefined;
+
         results.push({
           matchday, team: ourName, opponent: opponentName,
           scoreFor, scoreAgainst, goals, assists,
           cleanSheet: scoreAgainst === 0,
           yellowCards, redCards, ownGoals,
+          ...(shootout ? { shootout } : {}),
         });
       } else if (isLive) {
         teamCompletedCount[ourName] = (teamCompletedCount[ourName] ?? 0) + 1;

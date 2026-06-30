@@ -11,6 +11,8 @@ export const SCORING = {
   yellowCard: -1,
   redCard: -5,
   ownGoal: -10,
+  shootoutGoal: 5,
+  shootoutMiss: -5,
 } as const;
 
 // Which weights are still guesses — used to footnote them in the UI.
@@ -23,4 +25,6 @@ export const SCORING_LABELS: Record<keyof typeof SCORING, string> = {
   yellowCard: "Yellow card",
   redCard: "Red card",
   ownGoal: "Own goal",
+  shootoutGoal: "Shootout goal",
+  shootoutMiss: "Shootout miss",
 };
