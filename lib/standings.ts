@@ -14,6 +14,7 @@ export interface Standing {
   redCards: number;
   ownGoals: number;
   points: number;
+  eliminated: boolean;
 }
 
 export function shootoutPoints(r: Result): number {
@@ -54,7 +55,8 @@ export function buildStandings(results: Result[]): Standing[] {
       tally.ownGoals += r.ownGoals.length;
       tally.points += resultPoints(r);
     }
-    return { rank: 0, team: pick.team, owner: pick.owner, flag: pick.flag, ...tally };
+    const eliminated = teamResults.some((r) => r.eliminated === true);
+    return { rank: 0, team: pick.team, owner: pick.owner, flag: pick.flag, ...tally, eliminated };
   });
 
   rows.sort(

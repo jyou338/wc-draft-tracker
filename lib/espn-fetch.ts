@@ -193,6 +193,10 @@ export async function fetchFromESPN(): Promise<TournamentData> {
             }
           : undefined;
 
+        // ESPN's `advance` flag only means "qualified for the next round" in the
+        // knockout bracket; in the group stage it just marks the match winner.
+        const eliminated = !isGroupStage && comp.advance === false;
+
         results.push({
           matchday, date: event.date as string, team: ourName, opponent: opponentName,
           scoreFor, scoreAgainst, goals,
@@ -200,6 +204,7 @@ export async function fetchFromESPN(): Promise<TournamentData> {
           cleanSheet: scoreAgainst === 0,
           yellowCards, redCards, ownGoals,
           ...(shootout ? { shootout } : {}),
+          ...(eliminated ? { eliminated } : {}),
         });
       } else if (isLive) {
         teamCompletedCount[ourName] = (teamCompletedCount[ourName] ?? 0) + 1;

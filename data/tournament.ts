@@ -34,6 +34,7 @@ export interface Result {
   redCards: string[];
   ownGoals: string[];
   shootout?: Shootout; // present only for knockout matches decided on penalties
+  eliminated?: boolean; // true when this team lost a knockout tie (ESPN advance === false)
 }
 
 export interface Fixture {

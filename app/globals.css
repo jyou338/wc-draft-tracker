@@ -410,6 +410,26 @@ body {
 .row.idle .pts .num {
   color: var(--ink-faint);
 }
+/* Knocked out of the tournament — keep points visible but mute the row. */
+.row.eliminated {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+}
+.row.eliminated:hover {
+  opacity: 0.8;
+}
+.out-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: var(--card-red);
+  border: 1px solid rgba(255, 90, 95, 0.4);
+  background: rgba(255, 90, 95, 0.08);
+  vertical-align: middle;
+}
 
 /* ── Two-column lower grid ──────────────────────────────────────── */
 .grid2 {

@@ -59,7 +59,7 @@ export default async function Scoreboard() {
         return (
           <div
             key={s.team}
-            className={`row ${stateClass(s)}`}
+            className={`row ${stateClass(s)}${s.eliminated ? " eliminated" : ""}`}
             style={{ animationDelay: `${Math.min(i, 12) * 0.03}s` }}
           >
             <div className="plate">
@@ -76,6 +76,7 @@ export default async function Scoreboard() {
               <div className="names">
                 <div className="owner">
                   {s.owner} · {s.team}
+                  {s.eliminated && <span className="out-badge">OUT</span>}
                   <LiveBadge team={s.team} />
                 </div>
                 {next && (
